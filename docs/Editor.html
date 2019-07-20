@@ -1,15 +1,29 @@
 ﻿<html>
+
 <head>
     <title>Editor Panes</title>
     <meta charset="utf-8" />
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <link rel="stylesheet" href="lib/codemirror.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
-    <style>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script>
 
+
+    <script>
+        window.chrome.webview.addEventListener('message',
+            event => handle_events(event));
+    </script>
+
+    <style>
         html,
         body {
             height: 100%;
@@ -344,38 +358,31 @@
             resizeWidth: false
         });
 
-/**/</script>
+        /**/</script>
 </head>
 
 <body onload="pageloaded()">
     <div class="page-container">
-        <div class="btn-group"  style="margin-left: 12px;">
-          
+        <div class="btn-group" style="margin-left: 12px;">
             <button class="btn btn-light btn-sm">
-
                 <a href="https://www.scheme.com/tspl4/" target="_blank">
-                    <i class="fa fa-book" aria-hidden="true"
-                       style="color: #5c809e"></i>
+                    <i class="fa fa-book" aria-hidden="true" style="color: #5c809e"></i>
                 </a>
             </button>
             <button class="btn btn-light btn-sm">
-
                 <a href="#" onclick='evaluateexpression();return false;'>
-                    <i class="fa fa-play" aria-hidden="true"
-                       style="color: #5c809e"></i>
+                    <i class="fa fa-play" aria-hidden="true" style="color: #5c809e"></i>
                 </a>
             </button>
             <button class="btn btn-light btn-sm">
 
                 <a href="#" onclick='refreshpage();return false;'>
-                    <i class="fa fa-refresh" aria-hidden="true"
-                       style="color: #5c809e"></i>
+                    <i class="fa fa-refresh" aria-hidden="true" style="color: #5c809e"></i>
                 </a>
             </button>
             <button class="btn btn-light btn-sm">
                 <a href="EditorLayoutImage.html">
-                    <i aria-hidden="true"
-                       style="color: #5c809e">Image</i>
+                    <i aria-hidden="true" style="color: #5c809e">Image</i>
                 </a>
             </button>
         </div>
@@ -404,6 +411,7 @@
         </div>
     </div>
 </body>
+
 </html>
 <script>
     $(".panel-left").resizable({
@@ -453,19 +461,20 @@
     }
 
     function clearepressions() {
-        expression_editor.setValue('');
-        localStorage.setItem("lastExpression", '');
-        var oReq = new XMLHttpRequest();
-        oReq.open("GET", "api/3");
-        oReq.send();
+        window.chrome.webview.postMessage('::api:3');
+        // expression_editor.setValue('');
+        // localStorage.setItem("lastExpression", '');
+        // var oReq = new XMLHttpRequest();
+        // oReq.open("GET", "api/3");
+        // oReq.send();
     }
 
     function cleartranscript() {
-        transcript_editor.setValue('');
-        localStorage.setItem("lastTranscript", '');
-        var oReq = new XMLHttpRequest();
-        oReq.open("GET", "api/2");
-        oReq.send();
+        window.chrome.webview.postMessage('::api:2');
+
+        // var oReq = new XMLHttpRequest();
+        // oReq.open("GET", "api/2");
+        // oReq.send();
     }
 
     function clearresults() {
@@ -478,13 +487,14 @@
     }
 
     function gettranscript() {
-
-        var oReq = new XMLHttpRequest();
-        oReq.addEventListener("load", reqTranscriptListener);
-        oReq.open("GET", "api/1");
-        oReq.send();
+        window.chrome.webview.postMessage('::api:1');
+        //        var oReq = new XMLHttpRequest();
+        //        oReq.addEventListener("load", reqTranscriptListener);
+        //        oReq.open("GET", "api/1");
+        //        oReq.send();
     }
 
+    // not used 
     function reqExpressionListener() {
         result_editor.setValue(this.responseText);
         gettranscript();
@@ -492,11 +502,13 @@
 
     function evaluateexpression() {
         var text = expression_editor.getValue();
+        result_editor.setValue('');
+        window.chrome.webview.postMessage('::eval:' + text);
         localStorage.setItem("lastExpression", text);
-        var oReq = new XMLHttpRequest();
-        oReq.addEventListener("load", reqExpressionListener);
-        oReq.open("POST", "evaluate");
-        oReq.send(text);
+        //        var oReq = new XMLHttpRequest();
+        //        oReq.addEventListener("load", reqExpressionListener);
+        //        oReq.open("POST", "evaluate");
+        //        oReq.send(text);
     }
 
     function reqFormatListener() {
@@ -511,11 +523,12 @@
 
     function formatexpression() {
         var text = expression_editor.getValue();
-        localStorage.setItem("lastExpression", text);
-        var oReq = new XMLHttpRequest();
-        oReq.addEventListener("load", reqFormatListener);
-        oReq.open("POST", "api/5");
-        oReq.send(text);
+        window.chrome.webview.postMessage('::api:5' + text);
+        // localStorage.setItem("lastExpression", text);
+        // var oReq = new XMLHttpRequest();
+        // oReq.addEventListener("load", reqFormatListener);
+        // oReq.open("POST", "api/5");
+        // oReq.send(text);
     }
 
     function reqExpressionListener() {
@@ -525,10 +538,12 @@
 
     function evaluateselectedexpression() {
         var text = expression_editor.getSelection();
-        var oReq = new XMLHttpRequest();
-        oReq.addEventListener("load", reqExpressionListener);
-        oReq.open("POST", "evaluate");
-        oReq.send(text);
+        window.chrome.webview.postMessage('::eval:' + text);
+        localStorage.setItem("lastExpression", text);
+        //        var oReq = new XMLHttpRequest();
+        //        oReq.addEventListener("load", reqExpressionListener);
+        //        oReq.open("POST", "evaluate");
+        //        oReq.send(text);
     }
 
     function pageloaded() {
@@ -596,4 +611,63 @@
         }
     });
 
+    // unlike a normal web client we have a direct message channel
+    // 
+    function handle_events(event) {
+
+        var text = event.data;
+
+        // evaluator
+        var eval_reply = "::eval_reply:";
+        if (text.indexOf(eval_reply) !== -1) {
+            console.log("eval reply", event);
+            result_editor.setValue(text.slice(eval_reply.length));
+            gettranscript();
+        }
+
+        // api calls.
+        var api_reply = "::api_reply:";
+        if (text.indexOf(api_reply) !== -1) {
+            console.log("api reply", event);
+
+
+            // api 1 get transcript text response
+            if (text.indexOf(":1:") !== -1) {
+                transcript_editor.setValue(text.slice(api_reply.length + 2));
+            }
+
+            // api 2 clear transcript response 
+            if (text.indexOf(":2:") !== -1) {
+                localStorage.setItem("lastTranscript", '');
+                transcript_editor.setValue('');
+            }
+
+            // api 3 clear expression response 
+            if (text.indexOf(":3:") !== -1) {
+                localStorage.setItem("lastExpression", '');
+                expression_editor.setValue('');
+            }
+
+
+            // api 5 format text response
+            if (text.indexOf(":5:") !== -1) {
+                response = text.slice(api_reply.length + 2);
+                if (response == ';; error response') {
+                    result_editor.setValue("Re-Formatted Bad.");
+                } else {
+                    result_editor.setValue("Re-Formatted Ok.");
+                    expression_editor.setValue(response);
+                }
+            }
+        }
+
+        if (text.indexOf("::busy_reply:") !== -1) {
+            console.log("busy reply", event);
+            result_editor.setValue("scheme engine is busy");
+        }
+        if (text.indexOf("::invalid_request:") !== -1) {
+            console.log("invalid request", event);
+            result_editor.setValue("request was not recognized:\n" + text);
+        }
+    }
 </script>

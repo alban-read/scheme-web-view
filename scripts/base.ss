@@ -19,6 +19,16 @@
   (lambda (url)
     ((foreign-procedure "navigate" (string) ptr) url)))
 
+
+(define web-exec
+  (lambda (script fname)
+    ((foreign-procedure "web_exec" (string string) ptr) script fname)))
+
+ (define web-load-document
+  (lambda (fname) 
+        ((foreign-procedure "web_load_document" (string ) ptr) fname )))
+
+
 (define-syntax dotimes
   (syntax-rules ()
     [(_ n body ...)
@@ -140,6 +150,15 @@
   (apply transcript0 args)
   (transcript0 "\r\n"))
 
+
+(define web-result 
+ (lambda (result)
+  (display "web result:")
+  (display result)
+  (display "\n") ))  
+
+
+
 ;; control return; shift return calls this
 (define eval->string
   (lambda (x)
@@ -226,6 +245,13 @@
     (apply string-append 
       (cons ";;; transcript\n" (reverse transcript)))))
 
+
+(define message-response-get-transcript 
+ (lambda ()
+   (apply string-append 
+      (cons "::transcript_reply:" (reverse transcript)))))
+
+
 (vector-set! api-calls 1 api-call-get-transcript)
 
 (define api-call-clr-transcript
@@ -258,5 +284,4 @@
 ;; change the port here as required.
 
 (homepage "http://localhost:8087/editor.html")
-
 (startserver 8087 "docs")  

@@ -21,6 +21,8 @@ int start_web_server(int port, const std::string& base);
 DWORD WINAPI  garbage_collect(LPVOID cmd);
 std::wstring s2_ws(const std::string& str);
 extern std::wstring navigate_first;
+ptr scheme_web_view_exec(const char* cmd, char* cbname);
+ptr scheme_load_document_from_file(const char* relative_file_name);
 
 std::string get_exe_folder()
 {
@@ -114,6 +116,9 @@ int start_scheme_engine() {
 		Sforeign_symbol("scheme_home_page", static_cast<ptr>(scheme_home_page));
 		Sforeign_symbol("start_web_server", static_cast<ptr>(scheme_start_web_server));
 		Sforeign_symbol("EscapeKeyPressed", static_cast<ptr>(EscapeKeyPressed));
+		Sforeign_symbol("web_exec", static_cast<ptr>(scheme_web_view_exec));
+		Sforeign_symbol("web_load_document", static_cast<ptr>(scheme_load_document_from_file));
+		
 
 		load_script_if_exists("\\scripts\\base.ss");
 		load_script_if_exists("\\scripts\\init.ss");

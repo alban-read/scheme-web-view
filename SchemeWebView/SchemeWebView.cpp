@@ -91,6 +91,43 @@ void web_view_exec(const std::wstring& script) {
 	}).Get());
 }
 
+
+
+// scheme call into web view.
+ptr scheme_web_view_exec(const char* cmd, char *cbname)
+{
+	std::wstring script = s2_ws(cmd);
+	std::string callback = cbname;
+
+	if (web_view_window == nullptr) return Snil;
+	web_view_window->ExecuteScript(script.c_str(), Callback<IWebView2ExecuteScriptCompletedHandler>(
+		[callback](HRESULT errorCode, LPCWSTR resultObjectAsJson)->HRESULT {
+
+		LPCWSTR S = resultObjectAsJson;
+
+		if (!callback.empty() && S != nullptr && wcslen(S) > 0) {
+			if (spin(1000))
+			{
+				// callback times out..
+				return S_OK;
+			}
+			try
+			{
+				const auto param = _strdup(ws_2s(S).c_str());
+				CALL1(callback.c_str(), Sstring(param));
+			}
+			catch (...)
+			{
+
+				ReleaseMutex(g_script_mutex);
+			}
+		}
+		return S_OK;
+	}).Get());
+	return Strue;
+}
+
+
 std::wstring wide_get_exe_folder()
 {
 	TCHAR buffer[MAX_PATH];
@@ -108,7 +145,7 @@ size_t get_size_of_file(const std::wstring& path)
 
 std::wstring load_utf8_file_to_string(const std::wstring& filename)
 {
-	std::wstring buffer;            // stores file contents
+	std::wstring buffer;  // stores file contents
 	FILE* f;
 	const auto err = _wfopen_s(&f, filename.c_str(), L"rtS, ccs=UTF-8");
 	// Failed to open file
@@ -128,6 +165,17 @@ std::wstring load_utf8_file_to_string(const std::wstring& filename)
 	fclose(f);
 	return buffer;
 }
+
+
+
+ptr scheme_load_document_from_file(const char* relative_file_name)
+{
+	std::wstring file_name = wide_get_exe_folder() + L"/" + s2_ws(relative_file_name);
+	std::wstring document = load_utf8_file_to_string(file_name);
+	web_view_window->NavigateToString(document.c_str());
+	return Strue;
+}
+
 
 // we control the horizontal and the vertical..
 void GetDesktopResolution(int& horizontal, int& vertical)
@@ -251,6 +299,7 @@ int CALLBACK WinMain(
 			}
 
 			// messages between web view 2 and scheme app
+			// I am sticking with text; and using a prefix in the request and response.
 			web_view_window->add_WebMessageReceived(Callback<IWebView2WebMessageReceivedEventHandler>(
 				[](IWebView2WebView* webview, IWebView2WebMessageReceivedEventArgs* args) -> HRESULT {
 				
@@ -322,9 +371,6 @@ int CALLBACK WinMain(
 				CoTaskMemFree(message);
 				return S_OK;
 			}).Get(), &token);
-
-
-
 
 			// get this thing on its way
 			web_view_window->Navigate(navigate_first.c_str());
