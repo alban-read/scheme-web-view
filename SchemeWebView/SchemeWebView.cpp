@@ -33,6 +33,17 @@ int start_web_server(int port, const std::string& base);
 DWORD WINAPI  garbage_collect(LPVOID cmd);
 std::string get_exe_folder();
 extern std::wstring navigate_first;
+bool spin(const int turns);
+extern HANDLE g_script_mutex;
+
+namespace Assoc {
+	ptr cons_sfixnum(const char* symbol, const int value, ptr l);
+	ptr constUTF8toSstring(std::string s);
+	ptr constUTF8toSstring(const char* s);
+	ptr cons_sstring(const char* symbol, const char* value, ptr l);
+	char* Sstring_to_charptr(ptr sparam);
+}
+
 
 // The main window class name.
 static TCHAR szWindowClass[] = _T("SchemeShell");
@@ -53,6 +64,13 @@ std::wstring s2_ws(const std::string& str)
 	using convert_type_x = std::codecvt_utf8<wchar_t>;
 	std::wstring_convert<convert_type_x, wchar_t> converter_x;
 	return converter_x.from_bytes(str);
+}
+
+std::string ws_2s(const std::wstring& wstr)
+{
+	using convert_type_x = std::codecvt_utf8<wchar_t>;
+	std::wstring_convert<convert_type_x, wchar_t> converter_x;
+	return converter_x.to_bytes(wstr);
 }
 
 HRESULT web_view_navigate(const std::string& url) {
@@ -231,6 +249,82 @@ int CALLBACK WinMain(
 				const auto startup_script = load_utf8_file_to_string(locate_script);
 				web_view_window->AddScriptToExecuteOnDocumentCreated(startup_script.c_str(), nullptr);
 			}
+
+			// messages between web view 2 and scheme app
+			web_view_window->add_WebMessageReceived(Callback<IWebView2WebMessageReceivedEventHandler>(
+				[](IWebView2WebView* webview, IWebView2WebMessageReceivedEventArgs* args) -> HRESULT {
+				
+				PWSTR message;
+				args->get_WebMessageAsString(&message);
+
+				std::string text = ws_2s(message);
+				std::string result;
+
+				// we have one thread at a time in the scheme engine and it could be busy.
+				if (spin(10))
+				{
+					webview->PostWebMessageAsString(L"::busy_reply:");
+					CoTaskMemFree(message);
+					return S_OK;
+				}
+				try
+				{
+					// may be an eval message..
+					const char* eval_cmd = "::eval:";
+					if (text.rfind(eval_cmd, 0) == 0) {
+
+						// we are going to try and evaluate the message from the browser.
+						const auto scheme_string = CALL1("eval->string", Sstring(text.c_str()+strlen(eval_cmd)));
+						std::string result;
+						if (scheme_string != Snil && Sstringp(scheme_string))
+						{
+							result = Assoc::Sstring_to_charptr(scheme_string);
+						}
+						std::wstring response;
+						if (result.rfind("::", 0) == std::string::npos)
+							response = L"::eval_reply:";
+						response += s2_ws(result);
+						webview->PostWebMessageAsString(response.c_str());
+						return S_OK;
+					}
+
+					// may be an api message..
+					const char* api_cmd = "::api:";
+					if (text.rfind(api_cmd, 0) == 0) {
+
+						char* end_ptr;
+
+						int n = static_cast<int>(strtol(text.c_str() + strlen(api_cmd), &end_ptr, 10));
+						std::string param = end_ptr;
+						// browser to scheme api call
+						const auto scheme_string = CALL2("api-call", Sfixnum(n), Sstring(param.c_str()));
+						std::string result;
+						if (scheme_string != Snil && Sstringp(scheme_string))
+						{
+							result = Assoc::Sstring_to_charptr(scheme_string);
+						}
+						std::wstring response;
+						if (result.rfind("::", 0) == std::string::npos)
+							response = s2_ws(fmt::format("::api_reply:{0}:", n));
+						response += s2_ws(result);
+						webview->PostWebMessageAsString(response.c_str());
+						return S_OK;
+					}
+				}
+				catch (...)
+				{
+
+					ReleaseMutex(g_script_mutex);
+				}
+				std::wstring response = L"::invalid_request:";
+				response += message;
+				webview->PostWebMessageAsString(response.c_str());
+				CoTaskMemFree(message);
+				return S_OK;
+			}).Get(), &token);
+
+
+
 
 			// get this thing on its way
 			web_view_window->Navigate(navigate_first.c_str());

@@ -23,12 +23,12 @@ HANDLE server_thread = nullptr;
 std::string get_exe_folder();
 void web_view_exec(const std::wstring& script);
  
-
 namespace Assoc {
 	ptr cons_sfixnum(const char* symbol, const int value, ptr l);
 	ptr constUTF8toSstring(std::string s);
-	ptr constUTF8toSstring(const char *s);
+	ptr constUTF8toSstring(const char* s);
 	ptr cons_sstring(const char* symbol, const char* value, ptr l);
+	char* Sstring_to_charptr(ptr sparam);
 }
 
 // wait for scheme engine.
@@ -107,21 +107,7 @@ std::string server_log(const httplib::Request& req, const httplib::Response& res
 
  
 
-char* Sstring_to_charptr(ptr sparam)
-{
-	if(sparam == Snil || !Sstringp(sparam))
-	{
-		return _strdup("");
-	}
-	
-	ptr bytes = CALL1("string->utf8", sparam);
-	auto len = Sbytevector_length(bytes);
-	const auto data = Sbytevector_data(bytes);
-	const auto text = static_cast<char*>(calloc(len + 1, sizeof(char)));
-	memcpy(text, data, len);
-	bytes = Snil;
-	return text;
-}
+ 
 
 // evaluate 
 std::string do_scheme_eval(const char* text)
@@ -130,7 +116,7 @@ std::string do_scheme_eval(const char* text)
 	const auto scheme_string = CALL1("eval->string", Sstring(text));
 	if(scheme_string != Snil && Sstringp(scheme_string))
 	{
-		result = Sstring_to_charptr(scheme_string);
+		result = Assoc::Sstring_to_charptr(scheme_string);
 	}
 	return result;;
 }
@@ -151,7 +137,7 @@ std::string do_scheme_api_call(const int n, std::string v1)
 	const auto scheme_string = CALL2("api-call", Sfixnum(n), Sstring(v1.c_str()));
 	if (scheme_string != Snil && Sstringp(scheme_string))
 	{
-		result = Sstring_to_charptr(scheme_string);
+		result = Assoc::Sstring_to_charptr(scheme_string);
 	}
 	return result;
 }

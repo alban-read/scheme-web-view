@@ -158,6 +158,24 @@ namespace Assoc
 	}
 
 
+	char* Sstring_to_charptr(ptr sparam)
+	{
+		if (sparam == Snil || !Sstringp(sparam))
+		{
+			return _strdup("");
+		}
+
+		ptr bytes = CALL1("string->utf8", sparam);
+		auto len = Sbytevector_length(bytes);
+		const auto data = Sbytevector_data(bytes);
+		const auto text = static_cast<char*>(calloc(len + 1, sizeof(char)));
+		memcpy(text, data, len);
+		bytes = Snil;
+		return text;
+	}
+
+
+
 	ptr sstring(const char* symbol, const char* value)
 	{
 		ptr a = Snil;

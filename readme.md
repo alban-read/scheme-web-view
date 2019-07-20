@@ -7,7 +7,7 @@ based on Windows 10 Web View 2 and Chez Scheme.
 
 Selfie
 
-![Selfie](assets/Selfie.PNG )
+![Selfie](assets/Selfie.PNG)
 
 
 
