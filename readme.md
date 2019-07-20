@@ -5,7 +5,7 @@ Composed from Windows 10 Web View 2 (win32) and Chez Scheme.
 
 -------
 
-Selfiead
+*Selfie* 
 
 ![Selfie](assets/Selfie.png)
 
