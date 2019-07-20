@@ -1,0 +1,569 @@
+<html>
+<head>
+  <title>Editor Panes</title>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="lib/codemirror.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <style>
+    html,
+    body {
+      height: 100%;
+      font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+      padding: 0;
+      margin: 0;
+      background-color: #7F8E99;
+      background-image: url("woven.png");
+      overflow: auto;
+    }
+
+    .textarea {
+      width: 100%;
+      height: 100%;
+    }
+
+    .CodeMirror-line-numbers {
+      width: 2.2em;
+      color: #aaa;
+      background-color: #eee;
+      text-align: right;
+      padding-right: .3em;
+      font-size: 10pt;
+      font-family: monospace;
+      padding-top: .4em;
+      line-height: normal;
+    }
+
+    .codemirror {
+      width: 99%;
+      height: 99%;
+      background-color: #F5F6E4;
+      box-shadow: 4px 4px 3px grey;
+    }
+
+    .page-container {
+      margin: 2px;
+      height: 97%;
+    }
+
+    body {
+      background: rgba(178, 193, 204, 0.226);
+    }
+
+    /* horizontal panel*/
+
+    .panel-container {
+      display: flex;
+      flex-direction: row;
+      overflow: auto;
+      width: 98%;
+      height: 98%;
+    }
+
+    .panel-left {
+      flex: 0 0 auto;
+      /* only manually resize */
+      padding: 2px;
+      width: 30%;
+      min-height: 100px;
+      white-space: nowrap;
+      color: white;
+    }
+
+    .splitter {
+      flex: 0 0 auto;
+      width: 6px;
+      overflow: hidden;
+      cursor: col-resize;
+      padding: 3px;
+    }
+
+    .panel-right {
+      flex: 1 1 auto;
+      padding: 2px;
+      min-height: 100px;
+      color: white;
+    }
+
+
+    /* vertical panel */
+
+    .panel-container-vertical {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .panel-top {
+      flex: 0 0 auto;
+      padding-left: 12px;
+      padding-right: 12px;
+      padding-bottom: 2px;
+      padding-top: 2px;
+      min-height: 100px;
+      height: 60%;
+      width: 98%;
+      white-space: nowrap;
+      color: white;
+    }
+
+    .splitter-horizontal {
+      flex: 0 0 auto;
+      height: 8px;
+      cursor: row-resize;
+    }
+
+    .panel-bottom {
+      flex: 1 1 auto;
+      padding-left: 12px;
+      padding-right: 4px;
+      padding-bottom: 2px;
+      padding-top: 2px;
+      height: 30%;
+      width: 100%;
+    }
+
+    textarea {
+      width: 100%;
+      height: 100%
+    }
+
+    .textarea {
+
+      min-height: 4rem;
+      overflow: auto;
+    }
+  </style>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+  <script>
+    /// <reference path="../bower_components/jquery/dist/jquery.js" />
+    /*
+    jquery-resizable
+    Version 0.32 - 5/5/2018
+    © 2015-2018 Rick Strahl, West Wind Technologies
+    www.west-wind.com
+    Licensed under MIT License
+    */
+    (function (factory, undefined) {
+      if (typeof define === 'function' && define.amd) {
+        // AMD
+        define(['jquery'], factory);
+      } else if (typeof module === 'object' && typeof module.exports === 'object') {
+        // CommonJS
+        module.exports = factory(require('jquery'));
+      } else {
+        // Global jQuery
+        factory(jQuery);
+      }
+    }(function ($, undefined) {
+
+      if ($.fn.resizable)
+        return;
+
+      $.fn.resizable = function fnResizable(options) {
+        var defaultOptions = {
+          // selector for handle that starts dragging
+          handleSelector: null,
+          // resize the width
+          resizeWidth: true,
+          // resize the height
+          resizeHeight: true,
+          // the side that the width resizing is relative to
+          resizeWidthFrom: 'right',
+          // the side that the height resizing is relative to
+          resizeHeightFrom: 'bottom',
+          // hook into start drag operation (event passed)
+          onDragStart: null,
+          // hook into stop drag operation (event passed)
+          onDragEnd: null,
+          // hook into each drag operation (event passed)
+          onDrag: null,
+          // disable touch-action on $handle
+          // prevents browser level actions like forward back gestures
+          touchActionNone: true,
+          // instance id
+          instanceId: null
+        };
+        if (typeof options == "object")
+          defaultOptions = $.extend(defaultOptions, options);
+
+        return this.each(function () {
+          var opt = $.extend({}, defaultOptions);
+          if (!opt.instanceId)
+            opt.instanceId = "rsz_" + new Date().getTime();
+
+          var startPos, startTransition;
+
+          // get the element to resize 
+          var $el = $(this);
+          var $handle;
+
+          if (options === 'destroy') {
+            opt = $el.data('resizable');
+            if (!opt)
+              return;
+
+            $handle = getHandle(opt.handleSelector, $el);
+            $handle.off("mousedown." + opt.instanceId + " touchstart." + opt.instanceId);
+            if (opt.touchActionNone)
+              $handle.css("touch-action", "");
+            $el.removeClass("resizable");
+            return;
+          }
+
+          $el.data('resizable', opt);
+
+          // get the drag handle
+
+          $handle = getHandle(opt.handleSelector, $el);
+
+          if (opt.touchActionNone)
+            $handle.css("touch-action", "none");
+
+          $el.addClass("resizable");
+          $handle.on("mousedown." + opt.instanceId + " touchstart." + opt.instanceId, startDragging);
+
+          function noop(e) {
+            e.stopPropagation();
+            e.preventDefault();
+          };
+
+          function startDragging(e) {
+            // Prevent dragging a ghost image in HTML5 / Firefox and maybe others    
+            if (e.preventDefault) {
+              e.preventDefault();
+            }
+
+            startPos = getMousePos(e);
+            startPos.width = parseInt($el.width(), 10);
+            startPos.height = parseInt($el.height(), 10);
+
+            startTransition = $el.css("transition");
+            $el.css("transition", "none");
+
+            if (opt.onDragStart) {
+              if (opt.onDragStart(e, $el, opt) === false)
+                return;
+            }
+
+            $(document).on('mousemove.' + opt.instanceId, doDrag);
+            $(document).on('mouseup.' + opt.instanceId, stopDragging);
+            if (window.Touch || navigator.maxTouchPoints) {
+              $(document).on('touchmove.' + opt.instanceId, doDrag);
+              $(document).on('touchend.' + opt.instanceId, stopDragging);
+            }
+            $(document).on('selectstart.' + opt.instanceId, noop); // disable selection
+            $("iframe").css("pointer-events", "none");
+          }
+
+          function doDrag(e) {
+
+            var pos = getMousePos(e), newWidth, newHeight;
+
+            if (opt.resizeWidthFrom === 'left')
+              newWidth = startPos.width - pos.x + startPos.x;
+            else
+              newWidth = startPos.width + pos.x - startPos.x;
+
+            if (opt.resizeHeightFrom === 'top')
+              newHeight = startPos.height - pos.y + startPos.y;
+            else
+              newHeight = startPos.height + pos.y - startPos.y;
+
+            if (!opt.onDrag || opt.onDrag(e, $el, newWidth, newHeight, opt) !== false) {
+              if (opt.resizeHeight)
+                $el.height(newHeight);
+
+              if (opt.resizeWidth)
+                $el.width(newWidth);
+            }
+          }
+
+          function stopDragging(e) {
+            e.stopPropagation();
+            e.preventDefault();
+
+            $(document).off('mousemove.' + opt.instanceId);
+            $(document).off('mouseup.' + opt.instanceId);
+
+            if (window.Touch || navigator.maxTouchPoints) {
+              $(document).off('touchmove.' + opt.instanceId);
+              $(document).off('touchend.' + opt.instanceId);
+            }
+            $(document).off('selectstart.' + opt.instanceId, noop);
+
+            // reset changed values
+            $el.css("transition", startTransition);
+            $("iframe").css("pointer-events", "auto");
+
+            if (opt.onDragEnd)
+              opt.onDragEnd(e, $el, opt);
+
+            return false;
+          }
+
+          function getMousePos(e) {
+            var pos = { x: 0, y: 0, width: 0, height: 0 };
+            if (typeof e.clientX === "number") {
+              pos.x = e.clientX;
+              pos.y = e.clientY;
+            } else if (e.originalEvent.touches) {
+              pos.x = e.originalEvent.touches[0].clientX;
+              pos.y = e.originalEvent.touches[0].clientY;
+            } else
+              return null;
+
+            return pos;
+          }
+
+          function getHandle(selector, $el) {
+            if (selector && selector.trim()[0] === ">") {
+              selector = selector.trim().replace(/^>\s*/, "");
+              return $el.find(selector);
+            }
+
+            // Search for the selector, but only in the parent element to limit the scope
+            // This works for multiple objects on a page (using .class syntax most likely)
+            // as long as each has a separate parent container. 
+            return selector ? $el.parent().find(selector) : $el;
+          }
+        });
+      };
+    }));</script>
+  <script>
+    $(".panel-left").resizable({
+      handleSelector: ".splitter",
+      resizeHeight: false
+    });
+    $(".panel-top").resizable({
+      handleSelector: ".splitter-horizontal",
+      resizeWidth: false
+    });
+  </script>
+</head>
+
+<body onload="pageloaded()">
+  <div class="page-container">
+    <div class="bg-image">
+      <a href="https://www.scheme.com/tspl4/" target="_blank"><i class="fa fa-book" aria-hidden="true"
+          style="color:#E5F3FF"></i></a>
+      <a href="#" onclick='evaluateexpression();return false;'><i class="fa fa-play" aria-hidden="true"
+          style="color:#E5F3FF"></i></a>
+      <a href="#" onclick='refreshpage();return false;'><i class="fa fa-refresh" aria-hidden="true"
+          style="color:#E5F3FF"></i></a>
+
+      <div class="panel-container-vertical">
+        <div class="panel-top">
+          <textarea id='expression'>;;expressions</textarea>
+        </div>
+        <div class="splitter-horizontal">
+        </div>
+        <div class="panel-bottom">
+          <div class="panel-container">
+            <div class="panel-left">
+              <textarea id='result'></textarea>
+            </div>
+            <div class="splitter">
+            </div>
+            <div class="panel-right">
+              <textarea id='transcript' width='100%'></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+<script>
+  $(".panel-left").resizable({
+    handleSelector: ".splitter",
+    resizeHeight: false
+  });
+  $(".panel-top").resizable({
+    handleSelector: ".splitter-horizontal",
+    resizeWidth: false
+  });
+</script>
+
+<script src="lib/codemirror.js"></script>
+<script src="addon/edit/closebrackets.js"></script>
+<script src="addon/edit/matchbrackets.js"></script>
+<script src="mode/scheme/scheme.js"></script>
+<script>
+
+  // editor application script
+
+  function reqTranscriptListener() {
+    if (this.responseText == "timed_out:busy") {
+      transcript_editor.setValue(
+        localStorage.getItem("lastTranscript"));
+    } else {
+      transcript_editor.setValue(this.responseText);
+      localStorage.setItem("lastTranscript", this.responseText);
+    }
+  }
+
+  function reqExpressionsListener() {
+    transcript_editor.setValue(this.responseText);
+  }
+
+  function refreshOnexpressionsSaved() {
+    localStorage.setItem("lastExpression",
+      expression_editor.getValue());
+    localStorage.setItem("lastTranscript",
+      transcript_editor.getValue());
+    window.location.reload(true);
+  }
+
+
+  // save and reload.
+  function refreshpage() {
+    refreshOnexpressionsSaved()
+  }
+
+  function clearepressions() {
+    expression_editor.setValue('');
+    localStorage.setItem("lastExpression", '');
+    var oReq = new XMLHttpRequest();
+    oReq.open("GET", "api/3");
+    oReq.send();
+  }
+
+  function cleartranscript() {
+    transcript_editor.setValue('');
+    localStorage.setItem("lastTranscript", '');
+    var oReq = new XMLHttpRequest();
+    oReq.open("GET", "api/2");
+    oReq.send();
+  }
+
+  function clearresults() {
+    result_editor.setValue('');
+  }
+
+  function getexpressions() {
+    expression_editor.setValue(
+      localStorage.getItem("lastExpression"));
+  }
+
+  function gettranscript() {
+
+    var oReq = new XMLHttpRequest();
+    oReq.addEventListener("load", reqTranscriptListener);
+    oReq.open("GET", "api/1");
+    oReq.send();
+  }
+
+  function reqExpressionListener() {
+    result_editor.setValue(this.responseText);
+    gettranscript();
+  }
+
+  function evaluateexpression() {
+    var text = expression_editor.getValue();
+    localStorage.setItem("lastExpression", text);
+    var oReq = new XMLHttpRequest();
+    oReq.addEventListener("load", reqExpressionListener);
+    oReq.open("POST", "evaluate");
+    oReq.send(text);
+  }
+
+  function reqFormatListener() {
+    text = this.responseText;
+    if(text==';; error response') {
+      result_editor.setValue("Re-Formatted Bad.");
+    } else {
+      result_editor.setValue("Re-Formatted Ok.");
+      expression_editor.setValue(this.responseText);
+    }
+  }
+  
+  function formatexpression() {
+    var text = expression_editor.getValue();
+    localStorage.setItem("lastExpression", text);
+    var oReq = new XMLHttpRequest();
+    oReq.addEventListener("load", reqFormatListener);
+    oReq.open("POST", "api/5");
+    oReq.send(text);
+  }
+
+  function reqExpressionListener() {
+    result_editor.setValue(this.responseText);
+    gettranscript();
+  }
+
+  function evaluateselectedexpression() {
+    var text = expression_editor.getSelection();
+    var oReq = new XMLHttpRequest();
+    oReq.addEventListener("load", reqExpressionListener);
+    oReq.open("POST", "evaluate");
+    oReq.send(text);
+  }
+
+  function pageloaded() {
+    getexpressions();
+    gettranscript();
+  }
+
+  // view-source:https://codemirror.net/1/contrib/scheme/
+  function addClass(element, className) {
+    if (!editor.win.hasClass(element, className)) {
+      element.className = ((element.className.split(" ")).concat([className])).join(" ");
+    }
+  }
+  function removeClass(element, className) {
+    if (editor.win.hasClass(element, className)) {
+      var classes = element.className.split(" ");
+      for (var i = classes.length - 1; i >= 0; i--) {
+        if (classes[i] === className) {
+          classes.splice(i, 1);
+        }
+      }
+      element.className = classes.join(" ");
+    }
+  }
+  var expression_editor = CodeMirror.fromTextArea(expression, {
+    lineNumbers: true, mode: "scheme",
+    autoMatchParens: true,
+    matchBrackets: true,
+    disableSpellcheck: true,
+    lineNumbers: true,
+    extraKeys: {
+      "Ctrl-L": function (cm) {
+        clearepressions();
+      },
+      "Alt-F": function (cm) {
+        formatexpression();
+      },
+      "Ctrl-Enter": function (cm) {
+        evaluateexpression();
+      },
+      "Shift-Enter": function (cm) {
+        evaluateselectedexpression();
+      },
+    },
+    markParen: function (span, good) { addClass(span, good ? "good-matching-paren" : "bad-matching-paren"); },
+    unmarkParen: function (span) { removeClass(span, "good-matching-paren"); removeClass(span, "bad-matching-paren"); }
+  });
+  var result_editor = CodeMirror.fromTextArea(result, {
+    lineNumbers: true, mode: "scheme",
+    autoMatchParens: true,
+    disableSpellcheck: true,
+    extraKeys: {
+      "Ctrl-L": function (cm) {
+        clearresults();
+      },
+    }
+  });
+  var transcript_editor = CodeMirror.fromTextArea(transcript, {
+    disableSpellcheck: true,
+    lineNumbers: true,
+    extraKeys: {
+      "Ctrl-L": function (cm) {
+        cleartranscript();
+      },
+    }
+  });
+
+</script>
