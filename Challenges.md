@@ -1,6 +1,10 @@
 ### Challenges
 
-#### There are a few
+**First credits**
+
+*It is amazing how little work is required to glue some open source parts together and create something.  I am very impressed also with the fresh approach from Microsoft to things like the new web view control and the new terminal.*
+
+#### There are a few challenges
 
 The three main components are the hosting C++ application; the scheme engine that it hosts; and the web view control that it hosts.
 
