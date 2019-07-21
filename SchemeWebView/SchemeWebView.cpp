@@ -73,6 +73,47 @@ std::string ws_2s(const std::wstring& wstr)
 	return converter_x.to_bytes(wstr);
 }
 
+// wait while feeding event loop.
+void wait(const long ms)
+{
+	const auto end = clock() + ms;
+	do
+	{
+		MSG msg;
+		if (::PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+		{
+			::TranslateMessage(&msg);
+			::DispatchMessage(&msg);
+		}
+		::Sleep(0);
+	} while (clock() < end);
+}
+
+ptr scheme_wait(int ms)
+{
+	wait(ms);
+	return Strue;
+}
+
+ 
+ptr scheme_yield(int ms)
+{
+	// yield and wait
+	ReleaseMutex(g_script_mutex);
+	wait(ms);
+	// now we try to get back to life
+	auto dw_wait_result = WaitForSingleObject(g_script_mutex, 5);
+	while (dw_wait_result == WAIT_TIMEOUT)
+	{
+		wait(10);
+		dw_wait_result = WaitForSingleObject(g_script_mutex, 5);
+	}
+	// finally we can run again.
+	return Strue;
+}
+
+
+
 HRESULT web_view_navigate(const std::string& url) {
 	const auto wide_url = s2_ws(url);
 	if (web_view_window != nullptr) {
@@ -106,7 +147,7 @@ ptr scheme_web_view_exec(const char* cmd, char *cbname)
 		LPCWSTR S = resultObjectAsJson;
 
 		if (!callback.empty() && S != nullptr && wcslen(S) > 0) {
-			if (spin(1000))
+			if (spin(100))
 			{
 				// callback times out..
 				return S_OK;
@@ -118,14 +159,18 @@ ptr scheme_web_view_exec(const char* cmd, char *cbname)
 			}
 			catch (...)
 			{
-
+		
 				ReleaseMutex(g_script_mutex);
 			}
 		}
+	 
 		return S_OK;
 	}).Get());
+	// we can not starve the browser thread.
+	wait(5);
 	return Strue;
 }
+
 
 
 std::wstring wide_get_exe_folder()

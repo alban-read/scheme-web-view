@@ -1,4 +1,5 @@
  
+
 (define escape-pressed?
   (lambda () ((foreign-procedure "EscapeKeyPressed" () ptr))))
 
@@ -19,6 +20,13 @@
   (lambda (url)
     ((foreign-procedure "navigate" (string) ptr) url)))
 
+(define sleep
+ (lambda (ms)
+    ((foreign-procedure "scheme_wait" (int) ptr) ms)))
+
+(define yield
+ (lambda (ms)
+    ((foreign-procedure "scheme_yield" (int) ptr) ms)))
 
 (define web-exec
   (lambda (script fname)
@@ -33,8 +41,7 @@
   (syntax-rules ()
     [(_ n body ...)
      (let loop ([i n])  
-       (when (and (< 0 i) 
-        (not (escape-pressed?)))
+       (when (< 0 i) 
          body
          ...
          (loop (- i 1))))]))

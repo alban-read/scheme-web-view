@@ -19,4 +19,5 @@ DWORD WINAPI  garbage_collect(LPVOID cmd)
 		}
 		Sleep(1000);
 	}
+ 
 }

@@ -258,9 +258,9 @@
             expression_editor.getValue());
         localStorage.setItem("lastTranscript",
             transcript_editor.getValue());
+        window.chrome.webview.postMessage('::api:1');
         window.location.reload(true);
     }
-
 
     // save and reload.
     function refreshpage() {

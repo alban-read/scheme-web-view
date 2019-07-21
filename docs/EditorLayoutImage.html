@@ -165,12 +165,11 @@
         }
 
         #canvas {
+            width:100%;
             margin: 20px;
             padding: 20px;
-            background: #ffffff;
-            border: thin inset #aaaaaa;
-            width: 600px;
-            height: 300px;
+            display: block;
+  
         }
     </style>
 
@@ -210,8 +209,6 @@
             </button>
         </div>
 
-
-
         <div class="bg-image">
             <div class="panel-container-vertical">
               
@@ -222,8 +219,8 @@
                         </div>
                         <div class="splitter">
                         </div>
-                        <div class="panel-top-right">
-                            <canvas id="image" style="width: 100%; height:100%;" ></canvas>
+                        <div class="panel-top-right" id="image_holder">
+                            <canvas id="image" ></canvas>
                         </div>
                     </div>
                 </div>
@@ -286,6 +283,7 @@
             expression_editor.getValue());
         localStorage.setItem("lastTranscript",
             transcript_editor.getValue());
+        window.chrome.webview.postMessage('::api:1');
         window.location.reload(true);
     }
 
@@ -363,10 +361,19 @@
         getexpressions();
         gettranscript();
         canvas = document.getElementById("image");
-        ctx =canvas.getContext("2d");
+        ctx = canvas.getContext("2d");
+        canvas.style.width="100%";
+        canvas.width = canvas.clientWidth;
+        canvas.height = canvas.width * .75;
         ctx.fillStyle = 'white';
-        ctx.fillRect(0,0,10000,10000);
+        ctx.fillRect(0,0,canvas.width,canvas.height);
 
+    }
+
+    window.resize = function(){
+        canvas.style.width="100%";
+        canvas.width = canvas.clientWidth;
+        canvas.height = canvas.width * .75;
     }
 
     // view-source:https://codemirror.net/1/contrib/scheme/

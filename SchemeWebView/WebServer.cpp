@@ -22,6 +22,7 @@ std::wstring navigate_first = L"http://localhost:8086";
 HANDLE server_thread = nullptr;
 std::string get_exe_folder();
 void web_view_exec(const std::wstring& script);
+void  wait(const long ms);
  
 namespace Assoc {
 	ptr cons_sfixnum(const char* symbol, const int value, ptr l);
@@ -50,6 +51,23 @@ bool spin(const int turns)
 	}
 	return false;
 }
+
+// bool spin (const int turns)
+// {
+// 	// yield and wait
+// 	ReleaseMutex(g_script_mutex);
+// 	wait(turns);
+// 	// now we try to get back to life
+// 	auto dw_wait_result = WaitForSingleObject(g_script_mutex, 5);
+// 	while (dw_wait_result == WAIT_TIMEOUT)
+// 	{
+// 		wait(10);
+// 		dw_wait_result = WaitForSingleObject(g_script_mutex, 5);
+// 	}
+// 	// finally we can run again.
+// 	return false;
+// }
+
 
 // https://github.com/yhirose/cpp-httplib
 httplib::Server svr;
@@ -109,7 +127,7 @@ std::string server_log(const httplib::Request& req, const httplib::Response& res
 
  
 
-// evaluate 
+// evaluate  - deprecated due to direct comms channel
 std::string do_scheme_eval(const char* text)
 {
 	std::string result;
@@ -121,7 +139,7 @@ std::string do_scheme_eval(const char* text)
 	return result;;
 }
 
-// api call  
+// api call  - deprecated due to direct comms channel
 std::string do_scheme_api_call(const int n, std::string v1)
 {
 	std::string result;
