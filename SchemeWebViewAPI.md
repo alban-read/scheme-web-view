@@ -130,93 +130,93 @@ In the host application in the C++ code; a comms channel talks to the web view c
 
 ```C++
 
-			// messages between web view 2 and scheme app
-			// I am sticking with text; and using a prefix in the request and response.
-			web_view_window->
-                add_WebMessageReceived(
-                Callback<IWebView2WebMessageReceivedEventHandler>(
-				[](IWebView2WebView* webview, 
-                   IWebView2WebMessageReceivedEventArgs* args) -> HRESULT {
-				
-				PWSTR message;
-				args->get_WebMessageAsString(&message);
+// messages between web view 2 and scheme app
+// I am sticking with text; and using a prefix in the request and response.
+web_view_window->
+    add_WebMessageReceived(
+    Callback<IWebView2WebMessageReceivedEventHandler>(
+        [](IWebView2WebView* webview, 
+           IWebView2WebMessageReceivedEventArgs* args) -> HRESULT {
 
-				std::string text = ws_2s(message);
-				std::string result;
+            PWSTR message;
+            args->get_WebMessageAsString(&message);
 
-				// we have one thread at a time in the scheme engine it could be busy.
-				if (spin(10))
-				{
-					webview->PostWebMessageAsString(L"::busy_reply:");
-					CoTaskMemFree(message);
-					return S_OK;
-				}
-				try
-				{
-					// may be an eval message..
-					const char* eval_cmd = "::eval:";
-					if (text.rfind(eval_cmd, 0) == 0) {
+            std::string text = ws_2s(message);
+            std::string result;
 
-						// we are going to try and evaluate the message from the browser.
-						const auto scheme_string = 
-                            CALL1("eval->string",
-                                  Sstring(text.c_str()+strlen(eval_cmd)));
-						std::string result;
-						if (scheme_string != Snil && Sstringp(scheme_string))
-						{
-							result = Assoc::Sstring_to_charptr(scheme_string);
-						}
-						std::wstring response;
-						if (result.rfind("::", 0) == std::string::npos)
-							response = L"::eval_reply:";
-						response += s2_ws(result);
-						webview->PostWebMessageAsString(response.c_str());
-						return S_OK;
-					}
+            // we have one thread at a time in the scheme engine it could be busy.
+            if (spin(10))
+            {
+                webview->PostWebMessageAsString(L"::busy_reply:");
+                CoTaskMemFree(message);
+                return S_OK;
+            }
+            try
+            {
+                // may be an eval message..
+                const char* eval_cmd = "::eval:";
+                if (text.rfind(eval_cmd, 0) == 0) {
 
-					// may be an api message..
-					const char* api_cmd = "::api:";
-					if (text.rfind(api_cmd, 0) == 0) {
+                    // we are going to try and evaluate the message from the browser.
+                    const auto scheme_string = 
+                        CALL1("eval->string",
+                              Sstring(text.c_str()+strlen(eval_cmd)));
+                    std::string result;
+                    if (scheme_string != Snil && Sstringp(scheme_string))
+                    {
+                        result = Assoc::Sstring_to_charptr(scheme_string);
+                    }
+                    std::wstring response;
+                    if (result.rfind("::", 0) == std::string::npos)
+                        response = L"::eval_reply:";
+                    response += s2_ws(result);
+                    webview->PostWebMessageAsString(response.c_str());
+                    return S_OK;
+                }
 
-						char* end_ptr;
+                // may be an api message..
+                const char* api_cmd = "::api:";
+                if (text.rfind(api_cmd, 0) == 0) {
 
-						int n = static_cast<int>(strtol(text.c_str() +
-                                                        strlen(api_cmd), &end_ptr, 10));
-						std::string param = end_ptr;
-						// browser to scheme api call
-						const auto scheme_string = 
-                            CALL2("api-call",
-                                   Sfixnum(n),
-                                   Sstring(param.c_str()));
-						std::string result;
-						if (scheme_string != Snil && Sstringp(scheme_string))
-						{
-							result = Assoc::Sstring_to_charptr(scheme_string);
-						}
-						std::wstring response;
-						if (result.rfind("::", 0) == std::string::npos)
-							response = s2_ws(fmt::format("::api_reply:{0}:", n));
-						response += s2_ws(result);
-						webview->PostWebMessageAsString(response.c_str());
-						return S_OK;
-					}
-				}
-				catch (...)
-				{
+                    char* end_ptr;
 
-					ReleaseMutex(g_script_mutex);
-				}
-				std::wstring response = L"::invalid_request:";
-				response += message;
-				webview->PostWebMessageAsString(response.c_str());
-				CoTaskMemFree(message);
-				return S_OK;
-			}).Get(), &token);
+                    int n = static_cast<int>(strtol(text.c_str() +
+                                                    strlen(api_cmd), &end_ptr, 10));
+                    std::string param = end_ptr;
+                    // browser to scheme api call
+                    const auto scheme_string = 
+                        CALL2("api-call",
+                              Sfixnum(n),
+                              Sstring(param.c_str()));
+                    std::string result;
+                    if (scheme_string != Snil && Sstringp(scheme_string))
+                    {
+                        result = Assoc::Sstring_to_charptr(scheme_string);
+                    }
+                    std::wstring response;
+                    if (result.rfind("::", 0) == std::string::npos)
+                        response = s2_ws(fmt::format("::api_reply:{0}:", n));
+                    response += s2_ws(result);
+                    webview->PostWebMessageAsString(response.c_str());
+                    return S_OK;
+                }
+            }
+            catch (...)
+            {
 
-			// get this thing on its way
-			web_view_window->Navigate(navigate_first.c_str());
-			return S_OK;
-		}).Get());
+                ReleaseMutex(g_script_mutex);
+            }
+            std::wstring response = L"::invalid_request:";
+            response += message;
+            webview->PostWebMessageAsString(response.c_str());
+            CoTaskMemFree(message);
+            return S_OK;
+        }).Get(), &token);
+
+// get this thing on its way
+web_view_window->Navigate(navigate_first.c_str());
+return S_OK;
+}).Get());
 ```
 
 A message comes in from the browser; the scheme api handler is called; and the response is returned to the browser.
