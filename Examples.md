@@ -47,11 +47,9 @@ Another way of thinking about yield; i*s that we are migrating the windows messa
 
 ---
 
-
-
 #### Examples of using web-exec  
 
-### Use Canvas to draw the letter M.
+##### Use Canvas to draw the letter M.
 
 ```Scheme
 ;; example send 10 separate commands to draw the letter M.
@@ -76,6 +74,8 @@ The letter M was brought to you today by Mozilla from their JavaScript canvas AP
 
 **Make some graphics procedures**
 
+Create a function in the browser to draw a line; and a scheme function to execute it.
+
 ```Scheme
 (web-exec 
  "
@@ -96,7 +96,13 @@ The letter M was brought to you today by Mozilla from their JavaScript canvas AP
       "draw_line ( ~s, ~s, ~s, ~s, ~s)")
       x y x1 y1 w)])
       (web-exec cmd ""))))
-;
+;;
+```
+
+##### Now use the line drawing function
+
+```Scheme
+;;
 (define draw-tree
  (lambda ()
 	(define *scale* 8) 
@@ -136,7 +142,52 @@ The letter M was brought to you today by Mozilla from their JavaScript canvas AP
 
  ![tree](assets/tree.png)
 
----
+If you run this you will note how the tree is slowly drawn; line by line; each line is creating a request to the browser; and that function has a delay; to prevent it overwhelming the web view control.
+
+The slow drawing is a nice effect; but if you wanted speed; you could draw the object; with one call; a simple approach is to generate a command list first then send that.
+
+```Scheme
+;; create a list of graphics commands and execute them.
+;; assumes function draw_line defined in browser 
+(define draw-tree-fast
+  (lambda ()
+    (define *scale* 8)
+    (define *split* 16)
+    (define command-list '())
+    (define add-draw-line
+      (lambda (x y x1 y1 w)
+        (let ([cmd (format
+                     (string-append "draw_line ( ~s, ~s, ~s, ~s, ~s);\n") x
+                     y x1 y1 w)])
+          (set! command-list (cons cmd command-list)))))
+    (define degrees->radians
+      (lambda (d) (let ([pi 3.141592653589793]) (* d pi 1/180))))
+    (define (create-tree x1 y1 angle depth)
+      (if (zero? depth)
+          '()
+          (let ([x2 (+ x1
+                       (* (cos (degrees->radians angle)) depth *scale*))]
+                [y2 (- y1
+                       (* (sin (degrees->radians angle)) depth *scale*))])
+            (append
+              (list (map truncate (list x1 y1 x2 y2 depth)))
+              (create-tree x2 y2 (- angle *split*) (- depth 1))
+              (create-tree x2 y2 (+ angle *split*) (- depth 1))))))
+    (define tree (create-tree 350 480 90 10))
+    (define draw-a-line
+      (lambda (x y x1 y1 w)
+        (add-draw-line x y x1 y1 (exact->inexact (/ w 2)))))
+    (define get-line (lambda (x) (apply draw-a-line x)))
+    (map get-line tree)
+    (web-exec (apply string-append command-list) "")
+    #t))
+
+(draw-tree-fast)
+```
+
+That displays the same tree pattern all at once; by sending one long command to the browser.
+
+-------------------
 
 
 
