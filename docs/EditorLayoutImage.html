@@ -1,14 +1,22 @@
 ﻿<html>
+
 <head>
     <title>Editor Panes</title>
     <meta charset="utf-8" />
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <link rel="stylesheet" href="lib/codemirror.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="lib/StyleSheetA.css">
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
     <script src="jquery-resizable.js"></script>
 
@@ -17,7 +25,7 @@
         window.chrome.webview.addEventListener('message',
             event => handle_events(event));
 
-/**/</script>
+        /**/</script>
 
 
 
@@ -30,35 +38,30 @@
             <button class="btn btn-light btn-sm">
 
                 <a href="https://www.scheme.com/tspl4/" target="_blank">
-                    <i class="fa fa-book" aria-hidden="true"
-                       style="color: #5c809e"></i>
+                    <i class="fa fa-book" aria-hidden="true" style="color: #5c809e"></i>
                 </a>
             </button>
             <button class="btn btn-light btn-sm">
 
                 <a href="#" onclick='evaluateexpression();return false;'>
-                    <i class="fa fa-play" aria-hidden="true"
-                       style="color: #5c809e"></i>
+                    <i class="fa fa-play" aria-hidden="true" style="color: #5c809e"></i>
                 </a>
             </button>
             <button class="btn btn-light btn-sm">
 
                 <a href="#" onclick='refreshpage();return false;'>
-                    <i class="fa fa-refresh" aria-hidden="true"
-                       style="color: #5c809e"></i>
+                    <i class="fa fa-refresh" aria-hidden="true" style="color: #5c809e"></i>
                 </a>
             </button>
             <button class="btn btn-light btn-sm">
                 <a href="Editor.html">
-                    <i aria-hidden="true"
-                       style="color: #5c809e">Text</i>
+                    <i aria-hidden="true" style="color: #5c809e">Text</i>
                 </a>
             </button>
 
             <button class="btn btn-light btn-sm">
                 <a href="#" onclick='refreshCanvas();return false;'>
-                    <i aria-hidden="true"
-                       style="color: #5c809e">Clear</i>
+                    <i aria-hidden="true" style="color: #5c809e">Clear</i>
                 </a>
             </button>
 
@@ -67,7 +70,7 @@
 
         <div class="bg-image">
             <div class="panel-container-vertical">
-              
+
                 <div class="panel-top">
                     <div class="panel-container">
                         <div class="panel-left">
@@ -76,7 +79,7 @@
                         <div class="splitter">
                         </div>
                         <div class="panel-top-right" id="image_holder">
-                            <canvas id="image" ></canvas>
+                            <canvas id="image"></canvas>
                         </div>
                     </div>
                 </div>
@@ -97,9 +100,10 @@
             </div>
         </div>
     </div>
-    
+
 
 </body>
+
 </html>
 <script>
     $(".panel-left").resizable({
@@ -120,19 +124,7 @@
 
     // editor application script
 
-    function reqTranscriptListener() {
-        if (this.responseText == "timed_out:busy") {
-            transcript_editor.setValue(
-                localStorage.getItem("lastTranscript"));
-        } else {
-            transcript_editor.setValue(this.responseText);
-            localStorage.setItem("lastTranscript", this.responseText);
-        }
-    }
 
-    function reqExpressionsListener() {
-        transcript_editor.setValue(this.responseText);
-    }
 
     function refreshOnexpressionsSaved() {
         localStorage.setItem("lastExpression",
@@ -144,10 +136,6 @@
     }
 
 
-    // save and reload.
-    function refreshpage() {
-        refreshOnexpressionsSaved()
-    }
 
     function clearepressions() {
         window.chrome.webview.postMessage('::api:3');
@@ -170,11 +158,7 @@
         window.chrome.webview.postMessage('::api:1');
     }
 
-    // not used 
-    function reqExpressionListener() {
-        result_editor.setValue(this.responseText);
-        gettranscript();
-    }
+
 
     function evaluateexpression() {
         var text = expression_editor.getValue();
@@ -183,25 +167,12 @@
         localStorage.setItem("lastExpression", text);
     }
 
-    function reqFormatListener() {
-        text = this.responseText;
-        if (text == ';; error response') {
-            result_editor.setValue("Re-Formatted Bad.");
-        } else {
-            result_editor.setValue("Re-Formatted Ok.");
-            expression_editor.setValue(this.responseText);
-        }
-    }
 
     function formatexpression() {
         var text = expression_editor.getValue();
         window.chrome.webview.postMessage('::api:5' + text);
     }
 
-    function reqExpressionListener() {
-        result_editor.setValue(this.responseText);
-        gettranscript();
-    }
 
     function evaluateselectedexpression() {
         var text = expression_editor.getSelection();
@@ -216,11 +187,11 @@
     function refreshCanvas() {
         canvas = document.getElementById("image");
         ctx = canvas.getContext("2d");
-        canvas.style.width="100%";
+        canvas.style.width = "100%";
         canvas.width = canvas.clientWidth;
         canvas.height = canvas.width * .75;
         ctx.fillStyle = 'white';
-        ctx.fillRect(0,0,canvas.width,canvas.height);
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
     function pageloaded() {
@@ -229,8 +200,8 @@
         refreshCanvas();
     }
 
-    window.resize = function(){
-        canvas.style.width="100%";
+    window.resize = function () {
+        canvas.style.width = "100%";
         canvas.width = canvas.clientWidth;
         canvas.height = canvas.width * .75;
     }
@@ -296,9 +267,9 @@
     });
 
     // unlike a normal web client we have a direct message channel
-    // 
+    //
     function handle_events(event) {
-
+       // console.log(event);
         var text = event.data;
 
         // evaluator
@@ -306,7 +277,7 @@
         if (text.indexOf(eval_reply) !== -1) {
             console.log("eval reply", event);
             result_editor.setValue(text.slice(eval_reply.length));
-            gettranscript();
+            // gettranscript();
         }
 
         // api calls.
@@ -320,18 +291,17 @@
                 transcript_editor.setValue(text.slice(api_reply.length + 2));
             }
 
-            // api 2 clear transcript response 
+            // api 2 clear transcript response
             if (text.indexOf(":2:") !== -1) {
                 localStorage.setItem("lastTranscript", '');
                 transcript_editor.setValue('');
             }
 
-            // api 3 clear expression response 
+            // api 3 clear expression response
             if (text.indexOf(":3:") !== -1) {
                 localStorage.setItem("lastExpression", '');
                 expression_editor.setValue('');
             }
-
 
             // api 5 format text response
             if (text.indexOf(":5:") !== -1) {
@@ -343,6 +313,19 @@
                     expression_editor.setValue(response);
                 }
             }
+        }
+
+        // api 7 add text to transcript
+        if (text.indexOf(":7:") !== -1) {
+            var append_text = text.slice(8);
+            transcript_editor.replaceRange(append_text,
+                CodeMirror.Pos(transcript_editor.lastLine()));
+        }
+
+        // api 8 eval script
+        if (text.indexOf(":8:") !== -1) {
+            var script_text = text.slice(8);
+            eval(script_text);
         }
 
         if (text.indexOf("::busy_reply:") !== -1) {

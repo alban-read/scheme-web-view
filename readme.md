@@ -19,9 +19,11 @@ I prefer a workspace type interface rather than a terminal interface.
 
 I like panes rather than overlapping windows; you can adjust these panes a little; there is an invisible splitter between them; you can drag that.
 
-Type in your scheme code; press control-return; the result is displayed below.
+Usage
 
-Pressing shift-return will run a selected bit of code; I use that a lot.
+- Type in your scheme code; press control-return; the result is displayed below.
+- Pressing shift-return will run a selected bit of code; I use that a lot.
+
 
 If you write a function that uses display; that output goes into the wider transcript pane.
 
@@ -29,7 +31,7 @@ Although the text tiles are editable (thanks to code mirror) this is not an edit
 
 As well as executing scheme functions in the browser based view; you can also have the scheme functions create and execute any JavaScript in the web view; so that makes for reasonably unlimited potential.
 
-The web view provides a communications channel; so that the browser and scheme can communicate directly without using a web server.
+The web view provides a communications channel; so that the browser and scheme can communicate directly.
 
 There is still a web server; to load content; I always find browser controls are happier if you do not force feed them content against their natural flow and inclinations.
 
@@ -43,7 +45,18 @@ Being linked to the browser control; certain function calls are going to be very
 
 Some features of Chez Scheme are deeply linked into the core of its terminal loving nature; and very hard to use outside of it; I have tried to redirect the traffic; but not intrusively.  I do not modify Chez Scheme at all.
 
+##### Other documentation
 
+There is a Wiki here with notes.
+
+And other readme files; as I do write documentation.
+
+#### Building
+
+- I use a modern version of windows 10; and a Visual Studio.
+- The Microsoft document below; steps you through creating an app that embeds the web view controls.
+- I use a web server that is a header only library; and some components that can be obtained using vcpkg; a C++ package manager.
+- Will add a detailed build guide later.
 
 ------
 

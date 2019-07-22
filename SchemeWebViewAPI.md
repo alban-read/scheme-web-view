@@ -300,11 +300,3 @@ Although the Host to Scheme connection could be made less textual; more binary a
 
 Already disappointed that PostWebMessageAsString does not seem to post between threads.
 
-
-
-
-
-
-
-
-

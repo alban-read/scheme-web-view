@@ -26,6 +26,7 @@ ptr scheme_web_view_exec_threaded (const char* cmd, char* cbname);
 ptr scheme_load_document_from_file(const char* relative_file_name);
 ptr scheme_wait(int ms);
 ptr scheme_yield(int ms);
+ptr scheme_post_message(const char* msg);
 
 std::string get_exe_folder()
 {
@@ -123,7 +124,8 @@ int start_scheme_engine() {
 		Sforeign_symbol("web_load_document", static_cast<ptr>(scheme_load_document_from_file));
 		Sforeign_symbol("scheme_wait", static_cast<ptr>(scheme_wait));
 		Sforeign_symbol("scheme_yield", static_cast<ptr>(scheme_yield));
-
+		Sforeign_symbol("scheme_post_message", static_cast<ptr>(scheme_post_message));
+ 
 		load_script_if_exists("\\scripts\\base.ss");
 		load_script_if_exists("\\scripts\\init.ss");
 		load_script_if_exists("\\scripts\\env.ss");

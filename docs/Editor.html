@@ -4,19 +4,19 @@
     <title>Editor Panes</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
-          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <link rel="stylesheet" href="lib/codemirror.css">
     <link rel="stylesheet" href="lib/StyleSheetA.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
-            integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
-            crossorigin="anonymous"></script>
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
-            integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
-            crossorigin="anonymous"></script>
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+        crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
-            integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
-            crossorigin="anonymous"></script>
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
     <script src="jquery-resizable.js"></script>
 
@@ -25,7 +25,7 @@
         window.chrome.webview.addEventListener('message',
             event => handle_events(event));
     </script>
- 
+
     <script>
         $(".panel-left").resizable({
             handleSelector: ".splitter",
@@ -140,18 +140,13 @@
 
     function clearepressions() {
         window.chrome.webview.postMessage('::api:3');
-        // expression_editor.setValue('');
-        // localStorage.setItem("lastExpression", '');
-        // var oReq = new XMLHttpRequest();
-        // oReq.open("GET", "api/3");
-        // oReq.send();
     }
 
     function cleartranscript() {
         window.chrome.webview.postMessage('::api:2');
     }
 
- 
+
 
     function getexpressions() {
         expression_editor.setValue(
@@ -269,7 +264,7 @@
     // unlike a normal web client we have a direct message channel
     //
     function handle_events(event) {
-
+       // console.log(event);
         var text = event.data;
 
         // evaluator
@@ -277,7 +272,7 @@
         if (text.indexOf(eval_reply) !== -1) {
             console.log("eval reply", event);
             result_editor.setValue(text.slice(eval_reply.length));
-            gettranscript();
+            // gettranscript();
         }
 
         // api calls.
@@ -313,6 +308,19 @@
                     expression_editor.setValue(response);
                 }
             }
+        }
+
+        // api 7 add text to transcript
+        if (text.indexOf(":7:") !== -1) {
+            var append_text = text.slice(8);
+            transcript_editor.replaceRange(append_text,
+                CodeMirror.Pos(transcript_editor.lastLine()));
+        }
+
+        // api 8 eval script
+        if (text.indexOf(":8:") !== -1) {
+            var script_text = text.slice(8);
+            eval(script_text);
         }
 
         if (text.indexOf("::busy_reply:") !== -1) {

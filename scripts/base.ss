@@ -32,6 +32,14 @@
   (lambda (script fname)
     ((foreign-procedure "web_exec" (string string) ptr) script fname)))
 
+(define web-message
+  (lambda (msg)
+    ((foreign-procedure "scheme_post_message" (string) ptr) msg )))
+
+(define web-eval 
+  (lambda (script)
+    (web-message (string-append "::api:8:" script))))
+
  (define web-load-document
   (lambda (fname) 
         ((foreign-procedure "web_load_document" (string ) ptr) fname )))
@@ -106,7 +114,9 @@
   (lambda (x) (set! transcript (cons x transcript))))
 
 (define transcript0
-  (lambda (x) (set! transcript (cons x transcript))))
+  (lambda (x) 
+    (web-message (string-append "::api:7:" x))
+    (set! transcript (cons x transcript))))
 
 (define pretty-print-port pretty-print)
 

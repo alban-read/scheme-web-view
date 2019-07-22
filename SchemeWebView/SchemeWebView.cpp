@@ -132,7 +132,12 @@ void web_view_exec(const std::wstring& script) {
 	}).Get());
 }
 
-
+ptr scheme_post_message(const char* msg) {
+	if (web_view_window == nullptr) return Snil;
+	std::wstring wmsg = s2_ws(msg);
+	web_view_window->PostWebMessageAsString(wmsg.c_str());
+	return Snil;
+}
 
 // scheme call into web view.
 ptr scheme_web_view_exec(const char* cmd, char *cbname)
