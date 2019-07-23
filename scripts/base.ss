@@ -201,6 +201,13 @@
                (call-with-string-output-port
                  (lambda (p) (display-condition c p)))))))))
 
+;; eval and post back result.
+(define eval->string-post-back 
+ (lambda (x) 
+   (web-message (string-append "::eval_reply:" (eval->string x)))))
+ 
+
+
 ;; strapped to alt F  
 (define eval->pretty
   (lambda (x)

@@ -27,6 +27,18 @@ ptr scheme_load_document_from_file(const char* relative_file_name);
 ptr scheme_wait(int ms);
 ptr scheme_yield(int ms);
 ptr scheme_post_message(const char* msg);
+extern HWND main_window;
+
+bool spin(const int turns);
+extern HANDLE g_script_mutex;
+
+namespace Assoc {
+	ptr cons_sfixnum(const char* symbol, const int value, ptr l);
+	ptr constUTF8toSstring(std::string s);
+	ptr constUTF8toSstring(const char* s);
+	ptr cons_sstring(const char* symbol, const char* value, ptr l);
+	char* Sstring_to_charptr(ptr sparam);
+}
 
 std::string get_exe_folder()
 {
@@ -98,10 +110,52 @@ extern "C" __declspec(dllexport) ptr EscapeKeyPressed()
 }
 
 
+// run evaluator on own thread.
+DWORD WINAPI  exec_expression(LPVOID cmd)
+{
+	if (spin(20))
+	{
+		PostMessage(main_window, WM_USER + 501, 0,
+			reinterpret_cast<LPARAM>(_wcsdup(L"::busy_reply:")));
+		return -1;
+	}
+
+	try {
+		std::string scmd = static_cast<char*>(cmd);
+		const auto ss = Sstring(scmd.c_str());
+		CALL1("eval->string-post-back", ss);
+		delete[] static_cast<char*>(cmd);
+	}
+	catch (...) {
+
+	}
+	ReleaseMutex(g_script_mutex);
+	return 0;
+}
+
+
+// called when we have the mutex.
+void eval_text(const char* cmd)
+{
+	try {
+		auto script_thread = CreateThread(
+			nullptr,
+			0,
+			exec_expression,
+			LPVOID(cmd),
+			0,
+			nullptr);
+	}
+	catch (...) {
+	
+	}
+}
+
+
+
 
 int start_scheme_engine() {
 
- 
 	try
 	{
 		g_script_mutex = CreateMutex(nullptr, FALSE, nullptr);

@@ -184,6 +184,15 @@
     var canvas;
     var ctx;
 
+    // canvas related
+    function draw_line(x, y, x1, y1, w) {
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x1, y1);
+        ctx.lineWidth = w;
+        ctx.stroke();
+    }
+
     function refreshCanvas() {
         canvas = document.getElementById("image");
         ctx = canvas.getContext("2d");
@@ -269,7 +278,7 @@
     // unlike a normal web client we have a direct message channel
     //
     function handle_events(event) {
-       // console.log(event);
+        // console.log(event);
         var text = event.data;
 
         // evaluator

@@ -35,6 +35,8 @@ std::string get_exe_folder();
 extern std::wstring navigate_first;
 bool spin(const int turns);
 extern HANDLE g_script_mutex;
+void eval_text(const char* cmd);
+HWND main_window;
 
 namespace Assoc {
 	ptr cons_sfixnum(const char* symbol, const int value, ptr l);
@@ -132,10 +134,20 @@ void web_view_exec(const std::wstring& script) {
 	}).Get());
 }
 
+// ptr scheme_post_message(const char* msg) {
+// 	if (web_view_window == nullptr) return Snil;
+// 	std::wstring wmsg = s2_ws(msg);
+// 	web_view_window->PostWebMessageAsString(wmsg.c_str());
+// 	return Strue;
+// }
+
+// post back in; from any thread.
 ptr scheme_post_message(const char* msg) {
 	if (web_view_window == nullptr) return Snil;
-	std::wstring wmsg = s2_ws(msg);
-	web_view_window->PostWebMessageAsString(wmsg.c_str());
+	const std::wstring wmsg = s2_ws(msg);
+	PostMessage(main_window, WM_USER + 501, 0,
+		reinterpret_cast<LPARAM>(_wcsdup(wmsg.c_str())));
+	Sleep(2);
 	return Strue;
 }
 
@@ -152,9 +164,10 @@ ptr scheme_web_view_exec(const char* cmd, char *cbname)
 		LPCWSTR S = resultObjectAsJson;
 
 		if (!callback.empty() && S != nullptr && wcslen(S) > 0) {
-			if (spin(100))
+			if (spin(20))
 			{
-				// callback times out..
+				PostMessage(main_window, WM_USER + 501, 0,
+					reinterpret_cast<LPARAM>(_wcsdup(L"::busy_reply:")));
 				return S_OK;
 			}
 			try
@@ -298,7 +311,7 @@ int CALLBACK WinMain(
 
 		return 1;
 	}
-
+	main_window = hWnd;
 
 	auto s = init_web_server();
 	// Locate the browser and set up the environment for WebView
@@ -359,37 +372,31 @@ int CALLBACK WinMain(
 				std::string text = ws_2s(message);
 				std::string result;
 
-				// we have one thread at a time in the scheme engine and it could be busy.
-				if (spin(10))
-				{
-					webview->PostWebMessageAsString(L"::busy_reply:");
-					CoTaskMemFree(message);
-					return S_OK;
-				}
-				try
-				{
+			
+				 
 					// may be an eval message..
 					const char* eval_cmd = "::eval:";
 					if (text.rfind(eval_cmd, 0) == 0) {
-
-						// we are going to try and evaluate the message from the browser.
-						const auto scheme_string = CALL1("eval->string", Sstring(text.c_str()+strlen(eval_cmd)));
-						std::string result;
-						if (scheme_string != Snil && Sstringp(scheme_string))
-						{
-							result = Assoc::Sstring_to_charptr(scheme_string);
-						}
-						std::wstring response;
-						if (result.rfind("::", 0) == std::string::npos)
-							response = L"::eval_reply:";
-						response += s2_ws(result);
-						webview->PostWebMessageAsString(response.c_str());
+						// rate limit eval calls.
+						wait(50);
+						// eval in own thread.
+						std::string command = text.c_str() + strlen(eval_cmd);
+						eval_text(_strdup(command.c_str()));
 						return S_OK;
 					}
 
 					// may be an api message..
 					const char* api_cmd = "::api:";
 					if (text.rfind(api_cmd, 0) == 0) {
+
+						// we have one thread at a time in the scheme engine and it could be busy.
+						if (spin(20))
+						{
+							webview->PostWebMessageAsString(L"::busy_reply:");
+							CoTaskMemFree(message);
+							return S_OK;
+						}
+
 
 						char* end_ptr;
 
@@ -407,14 +414,11 @@ int CALLBACK WinMain(
 							response = s2_ws(fmt::format("::api_reply:{0}:", n));
 						response += s2_ws(result);
 						webview->PostWebMessageAsString(response.c_str());
+						ReleaseMutex(g_script_mutex);
 						return S_OK;
 					}
-				}
-				catch (...)
-				{
-
-					ReleaseMutex(g_script_mutex);
-				}
+				
+			 
 				std::wstring response = L"::invalid_request:";
 				response += message;
 				webview->PostWebMessageAsString(response.c_str());
@@ -462,6 +466,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		break;
+
+	// post from another thread	
+	case WM_USER + 501: //lparam contains wide message to browser.
+	{
+		web_view_window->PostWebMessageAsString(reinterpret_cast<wchar_t*>(lParam));
+		return 0;
+	}
+
 
 	default:
 		return DefWindowProc(hWnd, message, wParam, lParam);

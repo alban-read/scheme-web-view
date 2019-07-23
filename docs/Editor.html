@@ -193,7 +193,6 @@
     function evaluateselectedexpression() {
         var text = expression_editor.getSelection();
         window.chrome.webview.postMessage('::eval:' + text);
-        localStorage.setItem("lastExpression", text);
     }
 
     function pageloaded() {
