@@ -1,0 +1,36 @@
+## Components
+
+### The key components are :-
+
+
+#### Binary
+
+csv952.dll       - scheme engine
+
+fmt.dll         - the formatting library
+
+WebView2Loader  - Loads the Edge web view control.
+
+SchemeWebView   - the application
+
+Binary compressed files.
+
+boot\petite.boot
+boot\scheme.boot
+---
+
+
+#### Textual
+
+scripts\base.ss     - the scheme base file.
+
+scripts\startup.js  - the startup.js file
+
+
+docs\Editor.html                - the text panes editor view
+docs\EditorLayoutImage.html     - the image editor view
+
+---
+
+
+
