@@ -136,7 +136,7 @@ ptr scheme_post_message(const char* msg) {
 	if (web_view_window == nullptr) return Snil;
 	std::wstring wmsg = s2_ws(msg);
 	web_view_window->PostWebMessageAsString(wmsg.c_str());
-	return Snil;
+	return Strue;
 }
 
 // scheme call into web view.
