@@ -15,37 +15,12 @@
 #include <locale>
 #include <codecvt>
 #include "resource.h"
+#include "commonview.h"
 
 using namespace Microsoft::WRL;
 
-#ifndef ABNORMAL_EXIT
-#define ABNORMAL_EXIT ((void (*)(void))0)
-#endif /* ABNORMAL_EXIT */
 
-// Global variables
-#define CALL0(who) Scall0(Stop_level_value(Sstring_to_symbol(who)))
-#define CALL1(who, arg) Scall1(Stop_level_value(Sstring_to_symbol(who)), arg)
-#define CALL2(who, arg, arg2) Scall2(Stop_level_value(Sstring_to_symbol(who)), arg, arg2)
-
-int start_scheme_engine();
-int init_web_server();
-int start_web_server(int port, const std::string& base);
-DWORD WINAPI  garbage_collect(LPVOID cmd);
-std::string get_exe_folder();
-extern std::wstring navigate_first;
-bool spin(const int turns);
-extern HANDLE g_script_mutex;
-void eval_text(const char* cmd);
 HWND main_window;
-
-namespace Assoc {
-	ptr cons_sfixnum(const char* symbol, const int value, ptr l);
-	ptr constUTF8toSstring(std::string s);
-	ptr constUTF8toSstring(const char* s);
-	ptr cons_sstring(const char* symbol, const char* value, ptr l);
-	char* Sstring_to_charptr(ptr sparam);
-}
-
 
 // The main window class name.
 static TCHAR szWindowClass[] = _T("SchemeShell");
@@ -75,7 +50,7 @@ std::string ws_2s(const std::wstring& wstr)
 	return converter_x.to_bytes(wstr);
 }
 
-// wait while feeding event loop.
+// wait at least ms while also feeding the windows event loop.
 void wait(const long ms)
 {
 	const auto end = clock() + ms;
@@ -147,7 +122,7 @@ ptr scheme_post_message(const char* msg) {
 	const std::wstring wmsg = s2_ws(msg);
 	PostMessage(main_window, WM_USER + 501, 0,
 		reinterpret_cast<LPARAM>(_wcsdup(wmsg.c_str())));
-	Sleep(2);
+	Sleep(0); //throttle send rate.
 	return Strue;
 }
 
@@ -372,16 +347,13 @@ int CALLBACK WinMain(
 				std::string text = ws_2s(message);
 				std::string result;
 
-			
-				 
 					// may be an eval message..
 					const char* eval_cmd = "::eval:";
 					if (text.rfind(eval_cmd, 0) == 0) {
-						// rate limit eval calls.
-						wait(50);
 						// eval in own thread.
 						std::string command = text.c_str() + strlen(eval_cmd);
 						eval_text(_strdup(command.c_str()));
+						wait(25); // throttle.
 						return S_OK;
 					}
 

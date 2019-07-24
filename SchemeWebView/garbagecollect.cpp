@@ -1,10 +1,7 @@
 #include <scheme/scheme.h>
 #include <windows.h>
 
-#define CALL0(who) Scall0(Stop_level_value(Sstring_to_symbol(who)))
-#define CALL1(who, arg) Scall1(Stop_level_value(Sstring_to_symbol(who)), arg)
-#define CALL2(who, arg, arg2) Scall2(Stop_level_value(Sstring_to_symbol(who)), arg, arg2)
-extern HANDLE g_script_mutex;
+#include "commonview.h"
 
 // spare a second to take out the garbage.
 DWORD WINAPI  garbage_collect(LPVOID cmd)

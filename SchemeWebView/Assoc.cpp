@@ -158,20 +158,19 @@ namespace Assoc
 	}
 
 
-	char* Sstring_to_charptr(ptr sparam)
+	const char* Sstring_to_charptr(ptr sparam)
 	{
 		if (sparam == Snil || !Sstringp(sparam))
 		{
 			return _strdup("");
 		}
 
-		ptr bytes = CALL1("string->utf8", sparam);
-		auto len = Sbytevector_length(bytes);
-		const auto data = Sbytevector_data(bytes);
-		const auto text = static_cast<char*>(calloc(len + 1, sizeof(char)));
-		memcpy(text, data, len);
+		auto bytes = CALL1("string->utf8", sparam);
+		const auto len = Sbytevector_length(bytes);
+		const unsigned char* data = Sbytevector_data(bytes);
+		const std::string text((char*)data, len);
 		bytes = Snil;
-		return text;
+		return text.c_str();
 	}
 
 

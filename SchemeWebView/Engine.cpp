@@ -5,40 +5,18 @@
 #include <wil/result.h>
 #include <string>
 #include <WebView2.h>
+#include "commonview.h"
 
 #ifndef ABNORMAL_EXIT
 #define ABNORMAL_EXIT ((void (*)(void))0)
 #endif /* ABNORMAL_EXIT */
 
-// Global variables
-#define CALL0(who) Scall0(Stop_level_value(Sstring_to_symbol(who)))
-#define CALL1(who, arg) Scall1(Stop_level_value(Sstring_to_symbol(who)), arg)
-#define CALL2(who, arg, arg2) Scall2(Stop_level_value(Sstring_to_symbol(who)), arg, arg2)
+ 
 
 HANDLE g_script_mutex;
-extern Microsoft::WRL::ComPtr<IWebView2WebView> web_view_window;
-int start_web_server(int port, const std::string& base);
-DWORD WINAPI  garbage_collect(LPVOID cmd);
-std::wstring s2_ws(const std::string& str);
-extern std::wstring navigate_first;
-ptr scheme_web_view_exec(const char* cmd, char* cbname);
-ptr scheme_web_view_exec_threaded (const char* cmd, char* cbname);
-ptr scheme_load_document_from_file(const char* relative_file_name);
-ptr scheme_wait(int ms);
-ptr scheme_yield(int ms);
-ptr scheme_post_message(const char* msg);
-extern HWND main_window;
-
-bool spin(const int turns);
-extern HANDLE g_script_mutex;
-
-namespace Assoc {
-	ptr cons_sfixnum(const char* symbol, const int value, ptr l);
-	ptr constUTF8toSstring(std::string s);
-	ptr constUTF8toSstring(const char* s);
-	ptr cons_sstring(const char* symbol, const char* value, ptr l);
-	char* Sstring_to_charptr(ptr sparam);
-}
+ 
+ 
+ 
 
 std::string get_exe_folder()
 {
@@ -77,7 +55,6 @@ static void custom_init()
 {
 }
 
-HRESULT web_view_navigate(const std::string& url);
 ptr scheme_navigate(const char* u)
 {
 	const std::string url = u;
@@ -134,9 +111,16 @@ DWORD WINAPI  exec_expression(LPVOID cmd)
 }
 
 
-// called when we have the mutex.
+ 
 void eval_text(const char* cmd)
 {
+	// queue to get into background queue.
+	if (spin_wait(25))
+	{
+		PostMessage(main_window, WM_USER + 501, 0,
+			reinterpret_cast<LPARAM>(_wcsdup(L"::busy_reply:")));
+	}
+	ReleaseMutex(g_script_mutex);
 	try {
 		auto script_thread = CreateThread(
 			nullptr,
@@ -149,6 +133,7 @@ void eval_text(const char* cmd)
 	catch (...) {
 	
 	}
+	::Sleep(0);
 }
 
 

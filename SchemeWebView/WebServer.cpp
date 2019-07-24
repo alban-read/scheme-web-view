@@ -5,32 +5,22 @@
 #include <httplib.h>
 #include <fmt/format.h>
 #include <scheme/scheme.h>
+#include "commonview.h"
  
-#define CALL0(who) Scall0(Stop_level_value(Sstring_to_symbol(who)))
-#define CALL1(who, arg) Scall1(Stop_level_value(Sstring_to_symbol(who)), arg)
-#define CALL2(who, arg, arg2) Scall2(Stop_level_value(Sstring_to_symbol(who)), arg, arg2)
 
 // web server
 // one web server runs at a time.
-HANDLE g_web_server;
-extern HANDLE g_script_mutex;
-
 bool server_logging = false;
 int server_port = 8008;
 std::string server_base_dir = "./docs";
 std::wstring navigate_first = L"http://localhost:8086";
 HANDLE server_thread = nullptr;
+HANDLE g_web_server;
 std::string get_exe_folder();
 void web_view_exec(const std::wstring& script);
 void  wait(const long ms);
  
-namespace Assoc {
-	ptr cons_sfixnum(const char* symbol, const int value, ptr l);
-	ptr constUTF8toSstring(std::string s);
-	ptr constUTF8toSstring(const char* s);
-	ptr cons_sstring(const char* symbol, const char* value, ptr l);
-	char* Sstring_to_charptr(ptr sparam);
-}
+
 
 // wait for scheme engine.
 // this queues for engine access on a single thread
@@ -51,6 +41,27 @@ bool spin(const int turns)
 	}
 	return false;
 }
+
+// only sensible while still in UI thread.
+// this attempts to keep processing events while waiting,
+bool spin_wait(const int turns)
+{
+	auto dw_wait_result = WaitForSingleObject(g_script_mutex, 5);
+	auto time_out = turns;
+	while (--time_out > 0 && (dw_wait_result == WAIT_TIMEOUT))
+	{
+		wait(50);
+		dw_wait_result = WaitForSingleObject(g_script_mutex, 5);
+	}
+	//
+	if (time_out == 0)
+	{
+		// we are out of turns. 
+		return true;
+	}
+	return false;
+}
+
 
 // bool spin (const int turns)
 // {
@@ -123,9 +134,6 @@ std::string server_log(const httplib::Request& req, const httplib::Response& res
 	return s;
 }
 
- 
-
- 
 
 // evaluate  - deprecated due to direct comms channel
 std::string do_scheme_eval(const char* text)
