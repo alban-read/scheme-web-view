@@ -23,11 +23,18 @@
 
     <script>
         window.chrome.webview.addEventListener('message',
-            event => handle_events(event));
+            event => handle_events(event.data));
+    </script>
 
-        /**/</script>
-
-
+    <script>
+        const eventSource = new EventSource('/eventsrc');
+        eventSource.onmessage = (e) => {
+            data = e.data;
+            if (data != "") {
+                handle_events(data);
+            }
+        };
+    </script>
 
 </head>
 
@@ -280,9 +287,9 @@
 
     // unlike a normal web client we have a direct message channel
     //
-    function handle_events(event) {
+    function handle_events(data) {
         // console.log(event);
-        var text = event.data;
+        var text = data;
 
         // evaluator
         var eval_reply = "::eval_reply:";

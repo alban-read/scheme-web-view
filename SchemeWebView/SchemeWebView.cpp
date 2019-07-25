@@ -17,6 +17,7 @@
 #include <codecvt>
 #include "resource.h"
 #include "commonview.h"
+#include <deque>
 
 #pragma comment(lib, "Shlwapi.lib")
  
@@ -24,7 +25,7 @@
 
 using namespace Microsoft::WRL;
 
-
+HANDLE g_messages_mutex;
 HWND main_window;
 
 // The main window class name.
@@ -150,7 +151,7 @@ void web_view_exec(const std::wstring& script) {
 // 	return Strue;
 // }
 
-// post back in; from any thread.
+// post back in; from any thread; using web view post
 ptr scheme_post_message(const char* msg) {
 	if (web_view_window == nullptr) return Snil;
 	const std::wstring wmsg = s2_ws(msg);
@@ -158,6 +159,18 @@ ptr scheme_post_message(const char* msg) {
 		reinterpret_cast<LPARAM>(_wcsdup(wmsg.c_str())));
 	return Strue;
 }
+
+// post back in; from web server event channel.
+std::deque<std::string> messages;
+
+ptr scheme_post_message_eventsource(const char* msg) {
+	WaitForSingleObject(g_messages_mutex, INFINITE);
+	messages.push_back(_strdup(msg));
+	ReleaseMutex(g_messages_mutex);
+	return Strue;
+}
+
+
 
 // scheme call into web view.
 ptr scheme_web_view_exec(const char* cmd, char* cbname)
@@ -422,15 +435,6 @@ int CALLBACK WinMain(
 				}
 				return S_OK;
 			}).Get(), &token);
-
-
-
-
-
-
-
-
-
 
 
 			// optionally loads base java script library into every document.

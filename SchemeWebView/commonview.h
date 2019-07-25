@@ -2,6 +2,7 @@
  
 #include <scheme/scheme.h>
 #include <string>
+#include <deque>
 
 #define CALL0(who) Scall0(Stop_level_value(Sstring_to_symbol(who)))
 #define CALL1(who, arg) Scall1(Stop_level_value(Sstring_to_symbol(who)), arg)
@@ -11,6 +12,7 @@
 #endif /* ABNORMAL_EXIT */
 extern HANDLE g_script_mutex;
 extern HANDLE g_web_server;
+extern HANDLE g_messages_mutex;
 extern HANDLE server_thread;
 extern HWND main_window;
 
@@ -31,8 +33,10 @@ int start_scheme_engine();
 int init_web_server();
 void eval_text(const char* cmd);
 ptr scheme_capture_screen(const char* relative_file_name);
+ptr scheme_post_message_eventsource(const char* msg);
 ptr scheme_get_source();
 void do_events(int turns);
+extern std::deque<std::string> messages;
 
 namespace Assoc {
 	ptr cons_sfixnum(const char* symbol, const int value, ptr l);

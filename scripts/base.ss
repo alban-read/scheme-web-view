@@ -32,9 +32,16 @@
   (lambda (script fname)
     ((foreign-procedure "web_exec" (string string) ptr) script fname)))
 
-(define web-message
+(define web-message-channel
   (lambda (msg)
     ((foreign-procedure "scheme_post_message" (string) ptr) msg )))
+
+(define web-message-event
+  (lambda (msg)
+    ((foreign-procedure "scheme_post_event" (string) ptr) msg )))
+
+(define web-message web-message-event)
+
 
 (define web-capture
   (lambda (msg)

@@ -84,6 +84,34 @@ bool spin_wait(const int turns)
 httplib::Server svr;
 
 
+
+uint64_t event_id;
+std::string create_event(uint64_t offset) {
+	WaitForSingleObject(g_messages_mutex, INFINITE);
+	std::string eventdata;
+	if (event_id == 0)
+		eventdata = "retry: 15000\n\n";
+	else
+	{
+		eventdata += "id: ";
+		eventdata += std::to_string(event_id);
+		if (!messages.empty())
+		{
+			eventdata += "\ndata:" + messages.front() + "\n\n";
+			messages.pop_front();
+		}
+		else {
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));
+			eventdata += "\ndata:\n\n";
+		}
+	}
+	event_id++;
+	ReleaseMutex(g_messages_mutex);
+	return _strdup(eventdata.c_str());
+}
+
+
+
 std::string dump_headers(const httplib::Headers& headers) {
 
 	std::string s;
@@ -368,6 +396,14 @@ DWORD WINAPI start_server(LPVOID p)
 				}
 			});
 
+
+			// even source feeds regular events to browser from server.
+			svr.Get("/eventsrc", [](const Request& req, Response& res) {
+				res.content_producer = create_event;
+				res.set_header("Content-Type", "text/event-stream");
+			});
+
+
 			svr.set_base_dir(server_base_dir.c_str());
 			svr.listen("localhost", server_port);
 
@@ -412,6 +448,7 @@ int start_web_server(int port, const std::string& base)
 int init_web_server()
 {
 	g_web_server = CreateMutex(nullptr, FALSE, nullptr);
+	g_messages_mutex = CreateMutex(nullptr, FALSE, nullptr);
 	return 0;
 }
 

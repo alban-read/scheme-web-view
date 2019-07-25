@@ -6,8 +6,8 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
         integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <link rel="stylesheet" href="lib/codemirror.css">
-    <link rel="stylesheet" href="lib/StyleSheetA.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="lib/StyleSheetA.css">
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
         integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
         crossorigin="anonymous"></script>
@@ -20,44 +20,33 @@
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
     <script src="jquery-resizable.js"></script>
 
-
-    <script>
-        window.chrome.webview.addEventListener('message',
-            event => handle_events(event.data));
-    </script>
-
     <script>
         const eventSource = new EventSource('/eventsrc');
         eventSource.onmessage = (e) => {
-            data = e.data;
-            if (data != "") {
-                handle_events(data);
-            }
+           data=e.data;
+           if(data !="") {
+            console.log(data);
+            handle_events(data);
+           }
         };
     </script>
 
-    <script>
-        $(".panel-left").resizable({
-            handleSelector: ".splitter",
-            resizeHeight: false
-        });
-        $(".panel-top").resizable({
-            handleSelector: ".splitter-horizontal",
-            resizeWidth: false
-        });
 
-    </script>
+
 </head>
 
 <body onload="pageloaded()">
     <div class="page-container">
         <div class="btn-group" style="margin-left: 12px;">
+
             <button class="btn btn-light btn-sm">
+
                 <a href="https://www.scheme.com/tspl4/" target="_blank">
                     <i class="fa fa-book" aria-hidden="true" style="color: #5c809e"></i>
                 </a>
             </button>
             <button class="btn btn-light btn-sm">
+
                 <a href="#" onclick='evaluateexpression();return false;'>
                     <i class="fa fa-play" aria-hidden="true" style="color: #5c809e"></i>
                 </a>
@@ -69,17 +58,34 @@
                 </a>
             </button>
             <button class="btn btn-light btn-sm">
-                <a href="EditorLayoutImage.html">
-                    <i aria-hidden="true" style="color: #5c809e">Image</i>
+                <a href="Editor.html">
+                    <i aria-hidden="true" style="color: #5c809e">Text</i>
                 </a>
             </button>
-        </div>
 
+            <button class="btn btn-light btn-sm">
+                <a href="#" onclick='refreshCanvas();return false;'>
+                    <i aria-hidden="true" style="color: #5c809e">Clear</i>
+                </a>
+            </button>
+
+
+        </div>
 
         <div class="bg-image">
             <div class="panel-container-vertical">
+
                 <div class="panel-top">
-                    <textarea id='expression'>;;expressions</textarea>
+                    <div class="panel-container">
+                        <div class="panel-left">
+                            <textarea id='expression'></textarea>
+                        </div>
+                        <div class="splitter">
+                        </div>
+                        <div class="panel-top-right" id="image_holder">
+                            <canvas id="image"></canvas>
+                        </div>
+                    </div>
                 </div>
                 <div class="splitter-horizontal">
                 </div>
@@ -98,6 +104,8 @@
             </div>
         </div>
     </div>
+
+
 </body>
 
 </html>
@@ -139,9 +147,9 @@
             expression_editor.getValue());
         localStorage.setItem("lastTranscript",
             transcript_editor.getValue());
-        window.chrome.webview.postMessage('::api:1');
         window.location.reload(true);
     }
+
 
     // save and reload.
     function refreshpage() {
@@ -149,14 +157,24 @@
     }
 
     function clearepressions() {
-        window.chrome.webview.postMessage('::api:3');
+        expression_editor.setValue('');
+        localStorage.setItem("lastExpression", '');
+        var oReq = new XMLHttpRequest();
+        oReq.open("GET", "api/3");
+        oReq.send();
     }
 
     function cleartranscript() {
-        window.chrome.webview.postMessage('::api:2');
+        transcript_editor.setValue('');
+        localStorage.setItem("lastTranscript", '');
+        var oReq = new XMLHttpRequest();
+        oReq.open("GET", "api/2");
+        oReq.send();
     }
 
-
+    function clearresults() {
+        result_editor.setValue('');
+    }
 
     function getexpressions() {
         expression_editor.setValue(
@@ -164,10 +182,13 @@
     }
 
     function gettranscript() {
-        window.chrome.webview.postMessage('::api:1');
+
+        var oReq = new XMLHttpRequest();
+        oReq.addEventListener("load", reqTranscriptListener);
+        oReq.open("GET", "api/1");
+        oReq.send();
     }
 
-    // not used
     function reqExpressionListener() {
         result_editor.setValue(this.responseText);
         gettranscript();
@@ -175,9 +196,11 @@
 
     function evaluateexpression() {
         var text = expression_editor.getValue();
-        result_editor.setValue('');
-        window.chrome.webview.postMessage('::eval:' + text);
         localStorage.setItem("lastExpression", text);
+        var oReq = new XMLHttpRequest();
+        oReq.addEventListener("load", reqExpressionListener);
+        oReq.open("POST", "evaluate");
+        oReq.send(text);
     }
 
     function reqFormatListener() {
@@ -192,7 +215,11 @@
 
     function formatexpression() {
         var text = expression_editor.getValue();
-        window.chrome.webview.postMessage('::api:5' + text);
+        localStorage.setItem("lastExpression", text);
+        var oReq = new XMLHttpRequest();
+        oReq.addEventListener("load", reqFormatListener);
+        oReq.open("POST", "api/5");
+        oReq.send(text);
     }
 
     function reqExpressionListener() {
@@ -202,12 +229,50 @@
 
     function evaluateselectedexpression() {
         var text = expression_editor.getSelection();
-        window.chrome.webview.postMessage('::eval:' + text);
+        var oReq = new XMLHttpRequest();
+        oReq.addEventListener("load", reqExpressionListener);
+        oReq.open("POST", "evaluate");
+        oReq.send(text);
     }
 
     function pageloaded() {
         getexpressions();
         gettranscript();
+    }
+
+    // access to draw on image.
+    var canvas;
+    var ctx;
+
+    // canvas related
+    function draw_line(x, y, x1, y1, w) {
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x1, y1);
+        ctx.lineWidth = w;
+        ctx.stroke();
+    }
+
+    function refreshCanvas() {
+        canvas = document.getElementById("image");
+        ctx = canvas.getContext("2d");
+        canvas.style.width = "100%";
+        canvas.width = canvas.clientWidth;
+        canvas.height = canvas.width * .75;
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function pageloaded() {
+        getexpressions();
+        gettranscript();
+        refreshCanvas();
+    }
+
+    window.resize = function () {
+        canvas.style.width = "100%";
+        canvas.width = canvas.clientWidth;
+        canvas.height = canvas.width * .75;
     }
 
     // view-source:https://codemirror.net/1/contrib/scheme/
@@ -270,11 +335,10 @@
         }
     });
 
-    // unlike a normal web client we have a direct message channel
-    // or we can listen to sse.
     function handle_events(data) {
- 
+       // console.log(event);
         var text = data;
+
         // evaluator
         var eval_reply = "::eval_reply:";
         if (text.indexOf(eval_reply) !== -1) {

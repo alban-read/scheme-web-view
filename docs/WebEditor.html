@@ -21,9 +21,16 @@
     <script src="jquery-resizable.js"></script>
 
 
+
     <script>
-        window.chrome.webview.addEventListener('message',
-            event => handle_events(event.data));
+        $(".panel-left").resizable({
+            handleSelector: ".splitter",
+            resizeHeight: false
+        });
+        $(".panel-top").resizable({
+            handleSelector: ".splitter-horizontal",
+            resizeWidth: false
+        });
     </script>
 
     <script>
@@ -36,17 +43,6 @@
         };
     </script>
 
-    <script>
-        $(".panel-left").resizable({
-            handleSelector: ".splitter",
-            resizeHeight: false
-        });
-        $(".panel-top").resizable({
-            handleSelector: ".splitter-horizontal",
-            resizeWidth: false
-        });
-
-    </script>
 </head>
 
 <body onload="pageloaded()">
@@ -118,8 +114,7 @@
 <script src="mode/scheme/scheme.js"></script>
 <script>
 
-    // editor application script
-
+    // editor application script..
     function reqTranscriptListener() {
         if (this.responseText == "timed_out:busy") {
             transcript_editor.setValue(
@@ -139,9 +134,9 @@
             expression_editor.getValue());
         localStorage.setItem("lastTranscript",
             transcript_editor.getValue());
-        window.chrome.webview.postMessage('::api:1');
         window.location.reload(true);
     }
+
 
     // save and reload.
     function refreshpage() {
@@ -149,14 +144,24 @@
     }
 
     function clearepressions() {
-        window.chrome.webview.postMessage('::api:3');
+        expression_editor.setValue('');
+        localStorage.setItem("lastExpression", '');
+        var oReq = new XMLHttpRequest();
+        oReq.open("GET", "api/3");
+        oReq.send();
     }
 
     function cleartranscript() {
-        window.chrome.webview.postMessage('::api:2');
+        transcript_editor.setValue('');
+        localStorage.setItem("lastTranscript", '');
+        var oReq = new XMLHttpRequest();
+        oReq.open("GET", "api/2");
+        oReq.send();
     }
 
-
+    function clearresults() {
+        result_editor.setValue('');
+    }
 
     function getexpressions() {
         expression_editor.setValue(
@@ -164,10 +169,13 @@
     }
 
     function gettranscript() {
-        window.chrome.webview.postMessage('::api:1');
+
+        var oReq = new XMLHttpRequest();
+        oReq.addEventListener("load", reqTranscriptListener);
+        oReq.open("GET", "api/1");
+        oReq.send();
     }
 
-    // not used
     function reqExpressionListener() {
         result_editor.setValue(this.responseText);
         gettranscript();
@@ -175,9 +183,11 @@
 
     function evaluateexpression() {
         var text = expression_editor.getValue();
-        result_editor.setValue('');
-        window.chrome.webview.postMessage('::eval:' + text);
         localStorage.setItem("lastExpression", text);
+        var oReq = new XMLHttpRequest();
+        oReq.addEventListener("load", reqExpressionListener);
+        oReq.open("POST", "evaluate");
+        oReq.send(text);
     }
 
     function reqFormatListener() {
@@ -192,7 +202,11 @@
 
     function formatexpression() {
         var text = expression_editor.getValue();
-        window.chrome.webview.postMessage('::api:5' + text);
+        localStorage.setItem("lastExpression", text);
+        var oReq = new XMLHttpRequest();
+        oReq.addEventListener("load", reqFormatListener);
+        oReq.open("POST", "api/5");
+        oReq.send(text);
     }
 
     function reqExpressionListener() {
@@ -202,14 +216,16 @@
 
     function evaluateselectedexpression() {
         var text = expression_editor.getSelection();
-        window.chrome.webview.postMessage('::eval:' + text);
+        var oReq = new XMLHttpRequest();
+        oReq.addEventListener("load", reqExpressionListener);
+        oReq.open("POST", "evaluate");
+        oReq.send(text);
     }
 
     function pageloaded() {
         getexpressions();
         gettranscript();
     }
-
     // view-source:https://codemirror.net/1/contrib/scheme/
     function addClass(element, className) {
         if (!editor.win.hasClass(element, className)) {
@@ -270,11 +286,11 @@
         }
     });
 
-    // unlike a normal web client we have a direct message channel
-    // or we can listen to sse.
+
     function handle_events(data) {
- 
+        // console.log(event);
         var text = data;
+
         // evaluator
         var eval_reply = "::eval_reply:";
         if (text.indexOf(eval_reply) !== -1) {
@@ -335,9 +351,11 @@
             console.log("busy reply", event);
             result_editor.setValue("scheme engine is busy");
         }
+
         if (text.indexOf("::invalid_request:") !== -1) {
             console.log("invalid request", event);
             result_editor.setValue("request was not recognized:\n" + text);
         }
     }
+
 </script>
