@@ -30,6 +30,9 @@ HRESULT web_view_navigate(const std::string& url);
 int start_scheme_engine();
 int init_web_server();
 void eval_text(const char* cmd);
+ptr scheme_capture_screen(const char* relative_file_name);
+ptr scheme_get_source();
+void do_events(int turns);
 
 namespace Assoc {
 	ptr cons_sfixnum(const char* symbol, const int value, ptr l);

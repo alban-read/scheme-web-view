@@ -8,6 +8,7 @@
 #include <wil/result.h>
 #include <scheme/scheme.h>
 #include <fmt/format.h>
+#include <Shlwapi.h>
 
 #pragma comment(lib, "csv952.lib")
 
@@ -16,6 +17,10 @@
 #include <codecvt>
 #include "resource.h"
 #include "commonview.h"
+
+#pragma comment(lib, "Shlwapi.lib")
+ 
+
 
 using namespace Microsoft::WRL;
 
@@ -57,6 +62,13 @@ void wait(const long ms)
 	do
 	{
 		MSG msg;
+		// main window
+		if (::PeekMessage(&msg, main_window, 0, 0, PM_REMOVE))
+		{
+			::TranslateMessage(&msg);
+			::DispatchMessage(&msg);
+		}
+		// any window in thread
 		if (::PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
 		{
 			::TranslateMessage(&msg);
@@ -66,13 +78,35 @@ void wait(const long ms)
 	} while (clock() < end);
 }
 
+
+void do_events(int turns)
+{
+	for (int i = 0; i <turns; i++) {
+		::Sleep(0);
+		MSG msg;
+		// main window
+		if (::PeekMessage(&msg, main_window, 0, 0, PM_REMOVE))
+		{
+			::TranslateMessage(&msg);
+			::DispatchMessage(&msg);
+		}
+		// any window in thread
+		if (::PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+		{
+			::TranslateMessage(&msg);
+			::DispatchMessage(&msg);
+		}
+	}
+}
+
+
 ptr scheme_wait(int ms)
 {
 	wait(ms);
 	return Strue;
 }
 
- 
+
 ptr scheme_yield(int ms)
 {
 	// yield and wait
@@ -122,12 +156,11 @@ ptr scheme_post_message(const char* msg) {
 	const std::wstring wmsg = s2_ws(msg);
 	PostMessage(main_window, WM_USER + 501, 0,
 		reinterpret_cast<LPARAM>(_wcsdup(wmsg.c_str())));
-	Sleep(0); //throttle send rate.
 	return Strue;
 }
 
 // scheme call into web view.
-ptr scheme_web_view_exec(const char* cmd, char *cbname)
+ptr scheme_web_view_exec(const char* cmd, char* cbname)
 {
 	std::wstring script = s2_ws(cmd);
 	std::string callback = cbname;
@@ -152,11 +185,11 @@ ptr scheme_web_view_exec(const char* cmd, char *cbname)
 			}
 			catch (...)
 			{
-		
+
 				ReleaseMutex(g_script_mutex);
 			}
 		}
-	 
+
 		return S_OK;
 	}).Get());
 	// we can not starve the browser thread.
@@ -214,6 +247,40 @@ ptr scheme_load_document_from_file(const char* relative_file_name)
 	return Strue;
 }
 
+// capture screen to file.
+ptr scheme_capture_screen(const char* relative_file_name)
+{
+	const auto file_name= s2_ws(relative_file_name);
+
+	ComPtr<IStream> stream;
+	SHCreateStreamOnFileEx(
+		file_name.c_str(),
+		STGM_READWRITE | STGM_CREATE,
+		FILE_ATTRIBUTE_NORMAL,
+		TRUE,
+		nullptr,
+		&stream);
+
+	web_view_window->CapturePreview(
+		WEBVIEW2_CAPTURE_PREVIEW_IMAGE_FORMAT_PNG, stream.Get(),
+		Microsoft::WRL::Callback<IWebView2CapturePreviewCompletedHandler>(
+			[](HRESULT error_code) -> HRESULT
+	{	// pointless callback
+		return S_OK;
+	}).Get());
+
+	return Strue;
+}
+
+
+ptr scheme_get_source()
+{
+	wil::unique_cotaskmem_string uri;
+	web_view_window->get_Source(&uri);
+	const std::wstring source = uri.get();
+	return Assoc::constUTF8toSstring(ws_2s(source).c_str());
+}
+
 
 // we control the horizontal and the vertical..
 void GetDesktopResolution(int& horizontal, int& vertical)
@@ -224,6 +291,19 @@ void GetDesktopResolution(int& horizontal, int& vertical)
 	horizontal = desktop.right;
 	vertical = desktop.bottom;
 }
+
+
+bool check_valid_uri()
+{
+	wil::unique_cotaskmem_string uri;
+	web_view_window->get_Source(&uri);
+	const std::wstring source = uri.get();
+	auto len = navigate_first.find_last_of(L'/');
+	const auto base = navigate_first.substr(0, len);
+	std::size_t found = source.find(base);
+	return found != std::string::npos;
+}
+
 
 
 int CALLBACK WinMain(
@@ -303,11 +383,11 @@ int CALLBACK WinMain(
 
 			IWebView2Settings* Settings;
 			web_view_window->get_Settings(&Settings);
-			Settings->put_IsScriptEnabled(TRUE);
-			Settings->put_AreDefaultScriptDialogsEnabled(TRUE);
-			Settings->put_IsWebMessageEnabled(TRUE);
-			Settings->put_AreDevToolsEnabled(TRUE);
-			Settings->put_IsStatusBarEnabled(TRUE);
+			Settings->put_IsScriptEnabled(true);
+			Settings->put_AreDefaultScriptDialogsEnabled(true);
+			Settings->put_IsWebMessageEnabled(true);
+			Settings->put_AreDevToolsEnabled(true);
+			Settings->put_IsStatusBarEnabled(true);
 
 
 			// Resize WebView to fit the bounds of the parent window
@@ -321,11 +401,37 @@ int CALLBACK WinMain(
 				PWSTR uri;
 				args->get_Uri(&uri);
 				const std::wstring source(uri);
-				// perhaps let the engine know we navigated..
-
+				// ...
 				CoTaskMemFree(uri);
 				return S_OK;
 			}).Get(), &token);
+
+			web_view_window->add_ProcessFailed(Callback<IWebView2ProcessFailedEventHandler>(
+				[](IWebView2WebView* webview, IWebView2ProcessFailedEventArgs* args) -> HRESULT {
+				WEBVIEW2_PROCESS_FAILED_KIND kind;
+				args->get_ProcessFailedKind(&kind);
+				auto new_web_view_needed =
+					(kind == WEBVIEW2_PROCESS_FAILED_KIND_BROWSER_PROCESS_EXITED);
+				if (new_web_view_needed)
+				{
+					MessageBoxW(nullptr, L"This web view\r\n has sadly crashed..", L"Fatal Error", MB_OK);
+					DestroyWindow(main_window);
+				} else
+				{	// might work we guess,.
+					webview->Reload();
+				}
+				return S_OK;
+			}).Get(), &token);
+
+
+
+
+
+
+
+
+
+
 
 			// optionally loads base java script library into every document.
 			const auto locate_script = wide_get_exe_folder() + L"//scripts//startup.js";
@@ -341,60 +447,73 @@ int CALLBACK WinMain(
 			web_view_window->add_WebMessageReceived(Callback<IWebView2WebMessageReceivedEventHandler>(
 				[](IWebView2WebView* webview, IWebView2WebMessageReceivedEventArgs* args) -> HRESULT {
 				
+				 
+				if (!check_valid_uri())
+				{
+					return S_OK;
+				}
+				
 				PWSTR message;
 				args->get_WebMessageAsString(&message);
 
 				std::string text = ws_2s(message);
 				std::string result;
 
-					// may be an eval message..
-					const char* eval_cmd = "::eval:";
-					if (text.rfind(eval_cmd, 0) == 0) {
-						// eval in own thread.
-						std::string command = text.c_str() + strlen(eval_cmd);
-						eval_text(_strdup(command.c_str()));
-						wait(25); // throttle.
+				// may be an eval message..
+				const char* eval_cmd = "::eval:";
+				if (text.rfind(eval_cmd, 0) == 0) {
+					// eval in own thread.
+					std::string command = text.c_str() + strlen(eval_cmd);
+					eval_text(_strdup(command.c_str()));
+					wait(25);
+					return S_OK;
+				}
+
+				// may be an api message..
+				const char* api_cmd = "::api:";
+				if (text.rfind(api_cmd, 0) == 0) {
+
+					// we have one thread at a time in the scheme engine and it could be busy.
+					if (spin(20))
+					{
+						webview->PostWebMessageAsString(L"::busy_reply:");
+						CoTaskMemFree(message);
 						return S_OK;
 					}
 
-					// may be an api message..
-					const char* api_cmd = "::api:";
-					if (text.rfind(api_cmd, 0) == 0) {
 
-						// we have one thread at a time in the scheme engine and it could be busy.
-						if (spin(20))
-						{
-							webview->PostWebMessageAsString(L"::busy_reply:");
-							CoTaskMemFree(message);
-							return S_OK;
-						}
+					char* end_ptr;
 
-
-						char* end_ptr;
-
-						int n = static_cast<int>(strtol(text.c_str() + strlen(api_cmd), &end_ptr, 10));
-						std::string param = end_ptr;
-						// browser to scheme api call
-						const auto scheme_string = CALL2("api-call", Sfixnum(n), Sstring(param.c_str()));
-						std::string result;
-						if (scheme_string != Snil && Sstringp(scheme_string))
-						{
-							result = Assoc::Sstring_to_charptr(scheme_string);
-						}
-						std::wstring response;
-						if (result.rfind("::", 0) == std::string::npos)
-							response = s2_ws(fmt::format("::api_reply:{0}:", n));
-						response += s2_ws(result);
-						webview->PostWebMessageAsString(response.c_str());
-						ReleaseMutex(g_script_mutex);
-						return S_OK;
+					int n = static_cast<int>(strtol(text.c_str() + strlen(api_cmd), &end_ptr, 10));
+					std::string param = end_ptr;
+					// browser to scheme api call
+					const ptr scheme_string = CALL2("api-call", Sfixnum(n), Sstring(param.c_str()));
+					
+					std::string result;
+					if (scheme_string != Snil && Sstringp(scheme_string))
+					{
+						result = Assoc::Sstring_to_charptr(scheme_string);
 					}
-				
-			 
+
+
+
+					std::wstring response;
+					response = L"";
+					if (result.rfind("::", 0) == std::string::npos)
+						response = s2_ws(fmt::format("::api_reply:{0}:", n));
+					response += s2_ws(result);
+					webview->PostWebMessageAsString(response.c_str());
+					ReleaseMutex(g_script_mutex);
+				 
+					return S_OK;
+				}
+
+
 				std::wstring response = L"::invalid_request:";
 				response += message;
 				webview->PostWebMessageAsString(response.c_str());
 				CoTaskMemFree(message);
+				wait(25);
 				return S_OK;
 			}).Get(), &token);
 
@@ -409,6 +528,8 @@ int CALLBACK WinMain(
 	UpdateWindow(hWnd);
 	ShowWindow(hWnd, nCmdShow);
 	auto engine_started = start_scheme_engine();
+
+
 
 	// Main message loop:
 	MSG msg;
@@ -439,8 +560,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		PostQuitMessage(0);
 		break;
 
-	// post from another thread	
-	case WM_USER + 501: //lparam contains wide message to browser.
+		// post from another thread	
+	case WM_USER + 501:
 	{
 		web_view_window->PostWebMessageAsString(reinterpret_cast<wchar_t*>(lParam));
 		return 0;

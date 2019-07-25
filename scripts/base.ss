@@ -36,6 +36,15 @@
   (lambda (msg)
     ((foreign-procedure "scheme_post_message" (string) ptr) msg )))
 
+(define web-capture
+  (lambda (msg)
+    ((foreign-procedure "scheme_capture_screen" (string) ptr) msg )))
+
+(define web-uri
+  (lambda ()
+    ((foreign-procedure "scheme_get_source" () ptr)  )))
+
+
 (define web-eval 
   (lambda (script)
     (web-message (string-append "::api:8:" script))))
@@ -232,6 +241,10 @@
                (call-with-string-output-port
                  (lambda (p) (display-condition c p)))))))))
 
+(define eval->pretty-post-back 
+ (lambda (x) 
+   (web-message (string-append "::api_reply:5:" (eval->pretty x)))))
+ 
 (define save-evaluator-text
   (lambda (x) (set! expressions x)))
 
@@ -294,7 +307,7 @@
 (vector-set! api-calls 4 api-call-get-expressions)
 
 (define api-call-pretty
-  (lambda (n s1) (eval->pretty s1)))
+  (lambda (n s1) (string-append " " (eval->pretty s1))))
 
 (vector-set! api-calls 5 api-call-pretty)
 

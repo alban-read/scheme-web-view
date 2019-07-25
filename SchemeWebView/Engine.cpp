@@ -164,6 +164,10 @@ int start_scheme_engine() {
 		Sforeign_symbol("scheme_wait", static_cast<ptr>(scheme_wait));
 		Sforeign_symbol("scheme_yield", static_cast<ptr>(scheme_yield));
 		Sforeign_symbol("scheme_post_message", static_cast<ptr>(scheme_post_message));
+		Sforeign_symbol("scheme_capture_screen", static_cast<ptr>(scheme_capture_screen));
+		Sforeign_symbol("scheme_get_source", static_cast<ptr>(scheme_get_source));
+		
+ 
  
 		load_script_if_exists("\\scripts\\base.ss");
 		load_script_if_exists("\\scripts\\init.ss");

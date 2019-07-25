@@ -170,7 +170,7 @@ namespace Assoc
 		const unsigned char* data = Sbytevector_data(bytes);
 		const std::string text((char*)data, len);
 		bytes = Snil;
-		return text.c_str();
+		return _strdup(text.c_str());
 	}
 
 

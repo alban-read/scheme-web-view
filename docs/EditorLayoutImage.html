@@ -135,7 +135,10 @@
         window.location.reload(true);
     }
 
-
+    // save and reload.
+    function refreshpage() {
+        refreshOnexpressionsSaved()
+    }
 
     function clearepressions() {
         window.chrome.webview.postMessage('::api:3');
