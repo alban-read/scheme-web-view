@@ -1,4 +1,5 @@
 // compile with: /D_UNICODE /DUNICODE /DWIN32 /D_WINDOWS /c
+// Web View Control
 
 #include <windows.h>
 #include <stdlib.h>
@@ -144,13 +145,7 @@ void web_view_exec(const std::wstring& script) {
 	}).Get());
 }
 
-// ptr scheme_post_message(const char* msg) {
-// 	if (web_view_window == nullptr) return Snil;
-// 	std::wstring wmsg = s2_ws(msg);
-// 	web_view_window->PostWebMessageAsString(wmsg.c_str());
-// 	return Strue;
-// }
-
+ 
 // post back in; from any thread; using web view post
 ptr scheme_post_message(const char* msg) {
 	if (web_view_window == nullptr) return Snil;
