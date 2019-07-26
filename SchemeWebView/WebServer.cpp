@@ -84,10 +84,31 @@ bool spin_wait(const int turns)
 httplib::Server svr;
 
 
+// https://stackoverflow.com/a/34571089/5155484
+typedef unsigned char uchar;
+static const std::string b = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+static std::string base64_encode(const std::string& in) {
+	std::string out;
+
+	int val = 0, valb = -6;
+	for (uchar c : in) {
+		val = (val << 8) + c;
+		valb += 8;
+		while (valb >= 0) {
+			out.push_back(b[(val >> valb) & 0x3F]);
+			valb -= 6;
+		}
+	}
+	if (valb > -6) out.push_back(b[((val << 8) >> (valb + 8)) & 0x3F]);
+	while (out.size() % 4) out.push_back('=');
+	return out;
+}
+
+
 
 uint64_t event_id;
 std::string create_event(uint64_t offset) {
-	WaitForSingleObject(g_messages_mutex, INFINITE);
+
 	std::string eventdata;
 	if (event_id == 0)
 		eventdata = "retry: 15000\n\n";
@@ -95,20 +116,26 @@ std::string create_event(uint64_t offset) {
 	{
 		eventdata += "id: ";
 		eventdata += std::to_string(event_id);
+
+		while (messages.empty()) { Sleep(0); };
+		WaitForSingleObject(g_messages_mutex, INFINITE);
 		if (!messages.empty())
 		{
-			eventdata += "\ndata:" + messages.front() + "\n\n";
+			eventdata += "\ndata:" + base64_encode(messages.front()) + "\n\n";
 			messages.pop_front();
+			Sleep(0);
 		}
 		else {
-			std::this_thread::sleep_for(std::chrono::milliseconds(100));
+			Sleep(200);
 			eventdata += "\ndata:\n\n";
 		}
+		ReleaseMutex(g_messages_mutex);
 	}
 	event_id++;
-	ReleaseMutex(g_messages_mutex);
+
 	return _strdup(eventdata.c_str());
 }
+
 
 
 

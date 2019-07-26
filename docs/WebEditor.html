@@ -38,7 +38,7 @@
         eventSource.onmessage = (e) => {
             data = e.data;
             if (data != "") {
-                handle_events(data);
+                handle_events(atob(data));
             }
         };
     </script>
@@ -65,7 +65,7 @@
                 </a>
             </button>
             <button class="btn btn-light btn-sm">
-                <a href="EditorLayoutImage.html">
+                <a href="WebEditorLayoutImage.html">
                     <i aria-hidden="true" style="color: #5c809e">Image</i>
                 </a>
             </button>

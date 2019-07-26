@@ -25,8 +25,7 @@
         eventSource.onmessage = (e) => {
            data=e.data;
            if(data !="") {
-            console.log(data);
-            handle_events(data);
+            handle_events(atob(data));
            }
         };
     </script>
@@ -58,7 +57,7 @@
                 </a>
             </button>
             <button class="btn btn-light btn-sm">
-                <a href="Editor.html">
+                <a href="WebEditor.html">
                     <i aria-hidden="true" style="color: #5c809e">Text</i>
                 </a>
             </button>
