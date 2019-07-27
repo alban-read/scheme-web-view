@@ -21,6 +21,11 @@
     <script src="jquery-resizable.js"></script>
 
     <script>
+        window.chrome.webview.addEventListener('message',
+            event => handle_events(event.data));
+    </script>
+
+    <script>
         const eventSource = new EventSource('/eventsrc');
         eventSource.onmessage = (e) => {
             data = e.data;
@@ -49,6 +54,13 @@
                     <i class="fa fa-refresh" aria-hidden="true" style="color: #5c809e"></i>
                 </a>
             </button>
+
+            <button class="btn btn-light btn-sm">
+                <a href="#"  onclick='cancelmessage();return false;'> 
+                <i class="fa fa-stop-circle" aria-hidden="true" style="color: #5c809e"></i>
+                </a>
+            </button>
+
             <button class="btn btn-light btn-sm">
                 <a href="Editor.html">
                     <i aria-hidden="true" style="color: #5c809e">Text</i>
@@ -139,30 +151,28 @@
             expression_editor.getValue());
         localStorage.setItem("lastTranscript",
             transcript_editor.getValue());
+        window.chrome.webview.postMessage('::api:1');
         window.location.reload(true);
     }
-
 
     // save and reload.
     function refreshpage() {
         refreshOnexpressionsSaved()
     }
 
+    function cancelmessage() {
+        window.chrome.webview.postMessage('::api:1064');
+    }
+
     function clearepressions() {
-        expression_editor.setValue('');
-        localStorage.setItem("lastExpression", '');
-        var oReq = new XMLHttpRequest();
-        oReq.open("GET", "api/3");
-        oReq.send();
+        window.chrome.webview.postMessage('::api:3');
     }
 
     function cleartranscript() {
-        transcript_editor.setValue('');
-        localStorage.setItem("lastTranscript", '');
-        var oReq = new XMLHttpRequest();
-        oReq.open("GET", "api/2");
-        oReq.send();
+        window.chrome.webview.postMessage('::api:2');
     }
+
+
 
     function clearresults() {
         result_editor.setValue('');
@@ -174,11 +184,9 @@
     }
 
     function gettranscript() {
-        var oReq = new XMLHttpRequest();
-        oReq.addEventListener("load", reqTranscriptListener);
-        oReq.open("GET", "api/1");
-        oReq.send();
+        window.chrome.webview.postMessage('::api:1');
     }
+
 
     function reqExpressionListener() {
         result_editor.setValue(this.responseText);
@@ -194,10 +202,7 @@
             text = expression_editor.getValue();
             localStorage.setItem("lastExpression", text);
         }
-        var oReq = new XMLHttpRequest();
-        oReq.addEventListener("load", reqExpressionListener);
-        oReq.open("POST", "evaluate");
-        oReq.send(text);
+        window.chrome.webview.postMessage('::eval:' + text);
     }
 
 
@@ -205,10 +210,7 @@
         var text = "";
         text = expression_editor.getValue();
         localStorage.setItem("lastExpression", text);
-        var oReq = new XMLHttpRequest();
-        oReq.addEventListener("load", reqExpressionListener);
-        oReq.open("POST", "evaluate");
-        oReq.send(text);
+        window.chrome.webview.postMessage('::eval:' + text);
     }
 
     function reqFormatListener() {
@@ -223,11 +225,7 @@
 
     function formatexpression() {
         var text = expression_editor.getValue();
-        localStorage.setItem("lastExpression", text);
-        var oReq = new XMLHttpRequest();
-        oReq.addEventListener("load", reqFormatListener);
-        oReq.open("POST", "api/5");
-        oReq.send(text);
+        window.chrome.webview.postMessage('::api:5' + text);
     }
 
     function reqExpressionListener() {
@@ -237,10 +235,7 @@
 
     function evaluateselectedexpression() {
         var text = expression_editor.getSelection();
-        var oReq = new XMLHttpRequest();
-        oReq.addEventListener("load", reqExpressionListener);
-        oReq.open("POST", "evaluate");
-        oReq.send(text);
+        window.chrome.webview.postMessage('::eval:' + text);
     }
 
 
@@ -316,7 +311,6 @@
     });
 
     function handle_events(data) {
-        // console.log(event);
         var text = data;
 
         // evaluator
@@ -327,10 +321,17 @@
             // gettranscript();
         }
 
+        var eval_pending = "::eval_pending:";
+        if (text.indexOf(eval_pending) !== -1) {
+            console.log("eval pending", event);
+            return;
+        }
+
+
         // api calls.
         var api_reply = "::api_reply:";
         if (text.indexOf(api_reply) !== -1) {
-            console.log("api reply", event);
+     
 
 
             // api 1 get transcript text response

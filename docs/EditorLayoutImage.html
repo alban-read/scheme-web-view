@@ -73,6 +73,12 @@
             </button>
 
             <button class="btn btn-light btn-sm">
+                <a href="EditorLayoutImageDocuments.html">
+                    <i aria-hidden="true" style="color: #5c809e">Docs</i>
+                </a>
+            </button>
+
+            <button class="btn btn-light btn-sm">
                 <a href="#" onclick='refreshCanvas();return false;'>
                     <i aria-hidden="true" style="color: #5c809e">Clear</i>
                 </a>
@@ -136,9 +142,6 @@
 <script>
 
     // editor application script
-
-
-
     function refreshOnexpressionsSaved() {
         localStorage.setItem("lastExpression",
             expression_editor.getValue());
@@ -161,10 +164,12 @@
 
     function clearepressions() {
         window.chrome.webview.postMessage('::api:3');
+        expression_editor.setValue('');
     }
 
     function cleartranscript() {
         window.chrome.webview.postMessage('::api:2');
+        transcript_editor.setValue('');
     }
 
     function clearresults() {
@@ -300,7 +305,6 @@
     // unlike a normal web client we have a direct message channel
     //
     function handle_events(data) {
-        // console.log(event);
         var text = data;
 
         // evaluator
@@ -308,14 +312,18 @@
         if (text.indexOf(eval_reply) !== -1) {
             console.log("eval reply", event);
             result_editor.setValue(text.slice(eval_reply.length));
-            // gettranscript();
+            return;
+        }
+
+        var eval_pending = "::eval_pending:";
+        if (text.indexOf(eval_pending) !== -1) {
+            console.log("eval pending", event);
+            return;
         }
 
         // api calls.
         var api_reply = "::api_reply:";
         if (text.indexOf(api_reply) !== -1) {
-            console.log("api reply", event);
-
 
             // api 1 get transcript text response
             if (text.indexOf(":1:") !== -1) {

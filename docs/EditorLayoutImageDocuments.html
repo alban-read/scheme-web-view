@@ -21,6 +21,11 @@
     <script src="jquery-resizable.js"></script>
 
     <script>
+        window.chrome.webview.addEventListener('message',
+            event => handle_events(event.data));
+    </script>
+
+    <script>
         const eventSource = new EventSource('/eventsrc');
         eventSource.onmessage = (e) => {
             data = e.data;
@@ -47,6 +52,12 @@
 
                 <a href="#" onclick='refreshpage();return false;'>
                     <i class="fa fa-refresh" aria-hidden="true" style="color: #5c809e"></i>
+                </a>
+            </button>
+
+            <button class="btn btn-light btn-sm">
+                <a href="#"  onclick='cancelmessage();return false;'> 
+                <i class="fa fa-stop-circle" aria-hidden="true" style="color: #5c809e"></i>
                 </a>
             </button>
 
@@ -144,7 +155,6 @@
 <script>
 
     // editor application script
-
     function reqTranscriptListener() {
         if (this.responseText == "timed_out:busy") {
             transcript_editor.setValue(
@@ -203,31 +213,29 @@
     }
 
 
-
     // save and reload.
     function refreshpage() {
         refreshOnexpressionsSaved()
     }
-
     function clearepressions() {
+        window.chrome.webview.postMessage('::api:3');
         expression_editor.setValue('');
-        localStorage.setItem("lastExpression", '');
-        var oReq = new XMLHttpRequest();
-        oReq.open("GET", "api/3");
-        oReq.send();
     }
+
+    function cancelmessage() {
+        window.chrome.webview.postMessage('::api:1064');
+    }
+
 
     function cleartranscript() {
         transcript_editor.setValue('');
-        localStorage.setItem("lastTranscript", '');
-        var oReq = new XMLHttpRequest();
-        oReq.open("GET", "api/2");
-        oReq.send();
+        window.chrome.webview.postMessage('::api:2');
     }
 
     function clearresults() {
         result_editor.setValue('');
     }
+
 
     function getexpressions() {
         expression_editor.setValue(
@@ -235,10 +243,7 @@
     }
 
     function gettranscript() {
-        var oReq = new XMLHttpRequest();
-        oReq.addEventListener("load", reqTranscriptListener);
-        oReq.open("GET", "api/1");
-        oReq.send();
+        window.chrome.webview.postMessage('::api:1');
     }
 
 
@@ -252,9 +257,7 @@
             text = expression_editor.getValue();
         }
         localStorage.setItem("lastExpression", text);
-        var oReq = new XMLHttpRequest();
-        oReq.open("POST", "evaluate");
-        oReq.send(text);
+        window.chrome.webview.postMessage('::eval:' + text);
     }
 
 
@@ -262,35 +265,18 @@
         var text = "";
         text = expression_editor.getValue();
         localStorage.setItem("lastExpression", text);
-        var oReq = new XMLHttpRequest();
-        oReq.open("POST", "evaluate");
-        oReq.send(text);
-    }
-
-    function reqFormatListener() {
-        text = this.responseText;
-        if (text == ';; error response') {
-            result_editor.setValue("Re-Formatted Bad.");
-        } else {
-            result_editor.setValue("Re-Formatted Ok.");
-            expression_editor.setValue(this.responseText);
-        }
+        window.chrome.webview.postMessage('::eval:' + text);
     }
 
     function formatexpression() {
         var text = expression_editor.getValue();
-        localStorage.setItem("lastExpression", text);
-        var oReq = new XMLHttpRequest();
-        oReq.addEventListener("load", reqFormatListener);
-        oReq.open("POST", "api/5");
-        oReq.send(text);
+        window.chrome.webview.postMessage('::api:5' + text);
     }
+
 
     function evaluateselectedexpression() {
         var text = expression_editor.getSelection();
-        var oReq = new XMLHttpRequest();
-        oReq.open("POST", "evaluate");
-        oReq.send(text);
+        window.chrome.webview.postMessage('::eval:' + text);
     }
 
 
