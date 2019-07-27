@@ -14,7 +14,7 @@
  
 
 HANDLE g_script_mutex;
- 
+HANDLE g_commands_mutex;
  
  
 
@@ -86,54 +86,57 @@ extern "C" __declspec(dllexport) ptr EscapeKeyPressed()
 	return Sfalse;
 }
 
+std::deque<std::string> commands;
 
-// run evaluator on own thread.
-DWORD WINAPI  exec_expression(LPVOID cmd)
+// cancel pending commands.
+void cancel_commands()
 {
-	if (spin(20))
+	WaitForSingleObject(g_commands_mutex, INFINITE);
+	while (!commands.empty())
 	{
-		PostMessage(main_window, WM_USER + 501, 0,
-			reinterpret_cast<LPARAM>(_wcsdup(L"::busy_reply:")));
-		return -1;
+		commands.pop_front();
 	}
-
-	try {
-		std::string scmd = static_cast<char*>(cmd);
-		const auto ss = Sstring(scmd.c_str());
-		CALL1("eval->string-post-back", ss);
-		delete[] static_cast<char*>(cmd);
-	}
-	catch (...) {
-
-	}
-	ReleaseMutex(g_script_mutex);
-	return 0;
+	commands.shrink_to_fit();
+	ReleaseMutex(g_commands_mutex);
 }
 
 
- 
+DWORD WINAPI  process_commands(LPVOID x)
+{
+	while (true) {
+		while (commands.empty())
+		{
+			Sleep(10);
+		}
+
+		std::string eval;
+		WaitForSingleObject(g_commands_mutex, INFINITE);
+
+		// otherwise process them
+		if (!commands.empty()) {
+
+			eval = commands.front();
+			commands.pop_front();
+		}
+		ReleaseMutex(g_commands_mutex);
+
+		WaitForSingleObject(g_script_mutex, INFINITE);
+		try {
+			CALL1("eval->string-post-back", Sstring(eval.c_str()));
+		}
+		catch (...) {
+
+		}
+		ReleaseMutex(g_script_mutex);
+		::Sleep(20);
+	}
+}
+
 void eval_text(const char* cmd)
 {
-	// queue to get into background queue.
-	if (spin_wait(25))
-	{
-		PostMessage(main_window, WM_USER + 501, 0,
-			reinterpret_cast<LPARAM>(_wcsdup(L"::busy_reply:")));
-	}
-	ReleaseMutex(g_script_mutex);
-	try {
-		auto script_thread = CreateThread(
-			nullptr,
-			0,
-			exec_expression,
-			LPVOID(cmd),
-			0,
-			nullptr);
-	}
-	catch (...) {
-	
-	}
-	::Sleep(0);
+	WaitForSingleObject(g_commands_mutex, INFINITE);
+	commands.emplace_back(cmd);
+	ReleaseMutex(g_commands_mutex);
 }
 
 
@@ -170,10 +173,11 @@ int start_scheme_engine() {
 		Sforeign_symbol("scheme_get_source", static_cast<ptr>(scheme_get_source));
 		
  
- 
-		load_script_if_exists("\\scripts\\base.ss");
-		load_script_if_exists("\\scripts\\init.ss");
-		load_script_if_exists("\\scripts\\env.ss");
+		// set up; configure; start
+		load_script_if_exists("\\scripts\\base.ss"); // setup
+		load_script_if_exists("\\scripts\\env.ss");  // configure
+		load_script_if_exists("\\scripts\\init.ss"); // start
+
 
 		CALL1("suppress-greeting", Strue);
 		CALL1("waiter-prompt-string", Sstring(""));
@@ -183,6 +187,15 @@ int start_scheme_engine() {
 			nullptr,
 			0,
 			garbage_collect,
+			nullptr,
+			0,
+			nullptr);
+
+		// script exec background thread
+		static auto cmd_thread = CreateThread(
+			nullptr,
+			0,
+			process_commands,
 			nullptr,
 			0,
 			nullptr);

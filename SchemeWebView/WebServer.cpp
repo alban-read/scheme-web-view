@@ -105,7 +105,6 @@ static std::string base64_encode(const std::string& in) {
 }
 
 
-
 uint64_t event_id;
 std::string create_event(uint64_t offset) {
 
@@ -117,26 +116,35 @@ std::string create_event(uint64_t offset) {
 		eventdata += "id: ";
 		eventdata += std::to_string(event_id);
 
-		while (messages.empty()) { Sleep(0); };
+		while (messages.empty())
+		{
+			Sleep(10);
+		};
 		WaitForSingleObject(g_messages_mutex, INFINITE);
 		if (!messages.empty())
 		{
 			eventdata += "\ndata:" + base64_encode(messages.front()) + "\n\n";
 			messages.pop_front();
-			Sleep(0);
 		}
-		else {
-			Sleep(200);
-			eventdata += "\ndata:\n\n";
-		}
+
 		ReleaseMutex(g_messages_mutex);
 	}
-	event_id++;
 
-	return _strdup(eventdata.c_str());
+	event_id++;
+	Sleep(0);
+	return eventdata.c_str();
 }
 
-
+void cancel_messages()
+{
+	WaitForSingleObject(g_messages_mutex, INFINITE);
+	while (!messages.empty())
+	{
+		messages.pop_front();
+	}
+	messages.shrink_to_fit();
+	ReleaseMutex(g_messages_mutex);
+}
 
 
 std::string dump_headers(const httplib::Headers& headers) {
@@ -193,13 +201,13 @@ std::string server_log(const httplib::Request& req, const httplib::Response& res
 // evaluate  - deprecated due to direct comms channel
 std::string do_scheme_eval(const char* text)
 {
-	std::string result;
-	const auto scheme_string = CALL1("eval->string", Sstring(text));
-	if(scheme_string != Snil && Sstringp(scheme_string))
-	{
-		result = Assoc::Sstring_to_charptr(scheme_string);
-	}
-	return result;;
+	// std::string result;
+	// const auto scheme_string = CALL1("eval->string", Sstring(text));
+	// if(scheme_string != Snil && Sstringp(scheme_string))
+	// {
+	// 	result = Assoc::Sstring_to_charptr(scheme_string);
+	// }
+	// return result;;
 }
 
 // api call  - deprecated due to direct comms channel
@@ -265,30 +273,11 @@ DWORD WINAPI start_server(LPVOID p)
 				[&](const Request& req, Response& res)
 			{
 
-				// acquire script lock access or fail..
-				if (spin(10))
-				{
-					res.set_content("timed_out:scheme:busy", "text/plain");
-					Sleep(1000);
-					return;
+				const auto response = req.body;
+				if (req.body.c_str() != nullptr) {
+					eval_text(_strdup(response.c_str()));
 				}
-				try
-				{
-					const auto response = req.body;
-					if (req.body.c_str() != nullptr) {
-					
-						res.set_content(do_scheme_eval(response.c_str()), "text/plain");
-						return;
-					}
-				}
-				catch (...)
-				{
-
-					ReleaseMutex(g_script_mutex);
-				}
-				res.status = 500;
-				res.set_content("Error", "text/plain");
-				return;
+				res.set_content("::eval_pending:", "text/plain");
 
 			});
 
@@ -328,19 +317,12 @@ DWORD WINAPI start_server(LPVOID p)
 					}
 
 					std::string v1;
-					// std::string v2;
-					// std::string v3;
-					// std::string v4;
+				 
 					for (const auto& param : req.params)
 					{
 						if (param.first == "v1")
 							v1 = param.second;
-						// else if (param.first == "v2")
-						// 	v2 = param.second;
-						// else if (param.first == "v3")
-						// 	v3 = param.second;
-						// else if (param.first == "v4")
-						// 	v4 = param.second;
+					 
 					}
 					const auto result = do_scheme_api_call(n,v1);
 					if (result.empty())
@@ -382,18 +364,7 @@ DWORD WINAPI start_server(LPVOID p)
 						return;
 					}
 					const auto v1 = req.body;
-					// std::string v2;
-					// std::string v3;
-					// std::string v4;
-					// for (const auto& param : req.params)
-					// { 
-					// 	if (param.first == "v2")
-					// 		v2 = param.second;
-					// 	else if (param.first == "v3")
-					// 		v3 = param.second;
-					// 	else if (param.first == "v4")
-					// 		v4 = param.second;
-					// }
+				 
 					const auto result = do_scheme_api_call(n, v1);
 					if(result.empty())
 					{
@@ -476,6 +447,7 @@ int init_web_server()
 {
 	g_web_server = CreateMutex(nullptr, FALSE, nullptr);
 	g_messages_mutex = CreateMutex(nullptr, FALSE, nullptr);
+	g_commands_mutex = CreateMutex(nullptr, FALSE, nullptr);
 	return 0;
 }
 

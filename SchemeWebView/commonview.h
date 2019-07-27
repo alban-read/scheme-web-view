@@ -13,6 +13,7 @@
 extern HANDLE g_script_mutex;
 extern HANDLE g_web_server;
 extern HANDLE g_messages_mutex;
+extern HANDLE g_commands_mutex;
 extern HANDLE server_thread;
 extern HWND main_window;
 
@@ -37,6 +38,7 @@ ptr scheme_post_message_eventsource(const char* msg);
 ptr scheme_get_source();
 void do_events(int turns);
 extern std::deque<std::string> messages;
+extern std::deque<std::string> commands;
 
 namespace Assoc {
 	ptr cons_sfixnum(const char* symbol, const int value, ptr l);

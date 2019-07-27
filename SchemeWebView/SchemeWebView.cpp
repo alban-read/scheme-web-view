@@ -1,5 +1,7 @@
 // compile with: /D_UNICODE /DUNICODE /DWIN32 /D_WINDOWS /c
 // Web View Control
+// app embeds own web view control.
+
 
 #include <windows.h>
 #include <stdlib.h>
@@ -160,7 +162,7 @@ std::deque<std::string> messages;
 
 ptr scheme_post_message_eventsource(const char* msg) {
 	WaitForSingleObject(g_messages_mutex, INFINITE);
-	messages.push_back(_strdup(msg));
+	messages.emplace_back(msg);
 	ReleaseMutex(g_messages_mutex);
 	return Strue;
 }
