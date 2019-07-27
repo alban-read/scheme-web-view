@@ -1,5 +1,5 @@
  
-
+ 
 (define escape-pressed?
   (lambda () ((foreign-procedure "EscapeKeyPressed" () ptr))))
 
@@ -65,7 +65,7 @@
   (syntax-rules ()
     [(_ n body ...)
      (let loop ([i n])  
-       (when (< 0 i) 
+       (when (and (< 0 i) (not (escape-pressed?)))
          body
          ...
          (loop (- i 1))))]))
@@ -220,7 +220,10 @@
 ;; eval and post back result.
 (define eval->string-post-back 
  (lambda (x) 
-   (web-message (string-append "::eval_reply:" (eval->string x)))))
+ (try
+   (web-message (string-append "::eval_reply:" (eval->string x)))
+ (catch (lambda(x)  (web-message "::snafu:"))))))
+
  
 
 

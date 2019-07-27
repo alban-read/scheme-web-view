@@ -210,18 +210,11 @@ std::string do_scheme_eval(const char* text)
 	// return result;;
 }
 
-// api call  - deprecated due to direct comms channel
+// api call  - still works; but deprecated 
+// see webview for new api channel.
 std::string do_scheme_api_call(const int n, std::string v1)
 {
 	std::string result;
-
-	// this crashed; the moral keep this as simple and textual as possible.
-	// ptr l = Snil;
-	// Assoc::cons_sstring("v4", v4.c_str(), l);
-	// Assoc::cons_sstring("v3", v3.c_str(), l);
-	// Assoc::cons_sstring("v2", v2.c_str(), l);
-	// Assoc::cons_sstring("v1", v1.c_str(), l);
-	// Slock_object(l);
 
 	const auto scheme_string = CALL2("api-call", Sfixnum(n), Sstring(v1.c_str()));
 	if (scheme_string != Snil && Sstringp(scheme_string))

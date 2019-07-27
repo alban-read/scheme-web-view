@@ -77,20 +77,16 @@ ptr scheme_home_page(const char* first)
 
 
 
-extern "C" __declspec(dllexport) ptr EscapeKeyPressed()
-{
-	if (GetAsyncKeyState(VK_ESCAPE) != 0)
-	{
-		return Strue;
-	}
-	return Sfalse;
-}
 
 std::deque<std::string> commands;
 
 // cancel pending commands.
+
+bool cancelling = false;
+
 void cancel_commands()
 {
+	cancelling = true;
 	WaitForSingleObject(g_commands_mutex, INFINITE);
 	while (!commands.empty())
 	{
@@ -98,6 +94,26 @@ void cancel_commands()
 	}
 	commands.shrink_to_fit();
 	ReleaseMutex(g_commands_mutex);
+	WaitForSingleObject(g_messages_mutex, INFINITE);
+	while (!messages.empty())
+	{
+		messages.pop_front();
+	}
+	messages.shrink_to_fit();
+	ReleaseMutex(g_messages_mutex);
+	Sleep(250);
+ 
+}
+
+// 
+extern "C" __declspec(dllexport) ptr EscapeKeyPressed()
+{
+	if( cancelling )
+	{
+		cancelling = false;
+		return Strue;
+	}
+	return Sfalse;
 }
 
 
@@ -138,8 +154,6 @@ void eval_text(const char* cmd)
 	commands.emplace_back(cmd);
 	ReleaseMutex(g_commands_mutex);
 }
-
-
 
 
 int start_scheme_engine() {

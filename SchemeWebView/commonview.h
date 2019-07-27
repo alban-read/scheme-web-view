@@ -36,6 +36,8 @@ void eval_text(const char* cmd);
 ptr scheme_capture_screen(const char* relative_file_name);
 ptr scheme_post_message_eventsource(const char* msg);
 ptr scheme_get_source();
+void cancel_commands();
+extern bool cancelling;
 void do_events(int turns);
 extern std::deque<std::string> messages;
 extern std::deque<std::string> commands;

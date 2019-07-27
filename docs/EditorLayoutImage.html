@@ -49,7 +49,6 @@
                 </a>
             </button>
             <button class="btn btn-light btn-sm">
-
                 <a href="#" onclick='evaluateexpression();return false;'>
                     <i class="fa fa-play" aria-hidden="true" style="color: #5c809e"></i>
                 </a>
@@ -60,6 +59,13 @@
                     <i class="fa fa-refresh" aria-hidden="true" style="color: #5c809e"></i>
                 </a>
             </button>
+
+            <button class="btn btn-light btn-sm">
+                <a href="#"  onclick='cancelmessage();return false;'> 
+                <i class="fa fa-stop-circle" aria-hidden="true" style="color: #5c809e"></i>
+                </a>
+            </button>
+
             <button class="btn btn-light btn-sm">
                 <a href="Editor.html">
                     <i aria-hidden="true" style="color: #5c809e">Text</i>
@@ -146,6 +152,12 @@
     function refreshpage() {
         refreshOnexpressionsSaved()
     }
+
+    function cancelmessage() {
+        console.log("cancel");
+        window.chrome.webview.postMessage('::api:1064');
+    }
+
 
     function clearepressions() {
         window.chrome.webview.postMessage('::api:3');
