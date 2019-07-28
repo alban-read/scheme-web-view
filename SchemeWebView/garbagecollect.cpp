@@ -17,6 +17,7 @@ DWORD WINAPI  garbage_collect(LPVOID cmd)
 
 		WaitForSingleObject(g_messages_mutex, INFINITE);
 		messages.shrink_to_fit();
+		post_messages.shrink_to_fit();
 		ReleaseMutex(g_messages_mutex);
 		WaitForSingleObject(g_commands_mutex, INFINITE);
 		commands.shrink_to_fit();

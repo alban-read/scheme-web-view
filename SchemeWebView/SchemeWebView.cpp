@@ -149,14 +149,35 @@ void web_view_exec(const std::wstring& script) {
 	}).Get());
 }
 
-
-// post back in; from any thread; using web view post
+std::deque<std::wstring> post_messages;
+ 
 ptr scheme_post_message(const char* msg) {
-	if (web_view_window == nullptr) return Snil;
-	const std::wstring wmsg = s2_ws(msg);
-	PostMessage(main_window, WM_USER + 501, 0,
-		reinterpret_cast<LPARAM>(_wcsdup(wmsg.c_str())));
+	WaitForSingleObject(g_messages_mutex, INFINITE);
+	post_messages.emplace_back(s2_ws(msg));
+	ReleaseMutex(g_messages_mutex);
 	return Strue;
+}
+
+DWORD WINAPI process_postmessages(LPVOID x) {
+ 
+	while (true) {
+
+		while (post_messages.empty())
+		{
+			Sleep(20);
+		};
+		while (!post_messages.empty()) {
+			WaitForSingleObject(g_messages_mutex, INFINITE);
+			if (!post_messages.empty())
+			{
+				post_messages.pop_front();
+				web_view_window->PostWebMessageAsString(post_messages.front().c_str());
+			 
+			}
+			ReleaseMutex(g_messages_mutex);
+		}
+		
+	}
 }
 
 // post back in; from web server event channel.
@@ -169,8 +190,7 @@ ptr scheme_post_message_eventsource(const char* msg) {
 	return Strue;
 }
 
-
-
+ 
 // scheme call into web view.
 ptr scheme_web_view_exec(const char* cmd, char* cbname)
 {
@@ -184,30 +204,45 @@ ptr scheme_web_view_exec(const char* cmd, char* cbname)
 		LPCWSTR S = resultObjectAsJson;
 
 		if (!callback.empty() && S != nullptr && wcslen(S) > 0) {
-			if (spin(20))
+			const auto param = _strdup(ws_2s(S).c_str());
+			WaitForSingleObject(g_script_mutex, INFINITE);
 			{
-				PostMessage(main_window, WM_USER + 501, 0,
-					reinterpret_cast<LPARAM>(_wcsdup(L"::busy_reply:")));
-				return S_OK;
+				if(Sprocedurep(Sstring_to_symbol(callback.c_str())))
+					CALL1(callback.c_str(), Sstring(param));
 			}
-			try
-			{
-				const auto param = _strdup(ws_2s(S).c_str());
-				CALL1(callback.c_str(), Sstring(param));
-			}
-			catch (...)
-			{
-
-				ReleaseMutex(g_script_mutex);
-			}
+			ReleaseMutex(g_script_mutex);
 		}
-
 		return S_OK;
 	}).Get());
-	// we can not starve the browser thread.
-	wait(5);
+ 
 	return Strue;
 }
+
+ptr scheme_web_view_value(const char* cmd, char* vname)
+{
+	std::wstring script = s2_ws(cmd);
+	std::string value_name = vname;
+
+	if (web_view_window == nullptr) return Snil;
+	web_view_window->ExecuteScript(script.c_str(), Callback<IWebView2ExecuteScriptCompletedHandler>(
+		[value_name](HRESULT errorCode, LPCWSTR resultObjectAsJson)->HRESULT {
+
+		LPCWSTR S = resultObjectAsJson;
+
+		if (!value_name.empty() && S != nullptr && wcslen(S) > 0) {
+			const auto param = _strdup(ws_2s(S).c_str());
+			WaitForSingleObject(g_script_mutex, INFINITE);
+			{
+				eval_text(fmt::format("(define {0} \"{1}\") \"{1}\"", value_name, param).c_str());
+			}
+			ReleaseMutex(g_script_mutex);
+		}
+		return S_OK;
+	}).Get());
+
+	return Strue;
+}
+
 
 
 
@@ -298,7 +333,7 @@ DWORD WINAPI  update_status(LPVOID x)
 			pending_commands = commands.size();
 			ReleaseMutex(g_commands_mutex);
 			WaitForSingleObject(g_messages_mutex, INFINITE);
-			pending_messages = messages.size();
+			pending_messages = messages.size() + post_messages.size();
 			std::string text_message = fmt::format("Scheme ({0}.{1})",
 				pending_commands, pending_messages);
 			ReleaseMutex(g_messages_mutex);
@@ -387,13 +422,16 @@ int CALLBACK WinMain(
 	SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
 	GetDesktopResolution(h, v);
 	hInst = hInstance;
+	int padh = h / 8;
+	int padv = v / 8;
+
 
 	HWND hWnd = CreateWindow(
 		szWindowClass,
 		szTitle,
 		WS_OVERLAPPEDWINDOW,
 		300, 200,
-		h - 400, v - 400,
+		h - padh, v - padv,
 		NULL,
 		NULL,
 		hInstance,
@@ -439,7 +477,7 @@ int CALLBACK WinMain(
 			// Resize WebView to fit the bounds of the parent window
 			RECT bounds;
 			GetClientRect(hWnd, &bounds);
-			bounds.bottom = bounds.bottom - 5;
+			bounds.bottom = bounds.bottom - 45;
 
 			web_view_window->put_Bounds(bounds);
 
@@ -522,6 +560,7 @@ int CALLBACK WinMain(
 						if (spin(20))
 						{
 							webview->PostWebMessageAsString(L"::busy_reply:");
+
 							CoTaskMemFree(message);
 							return S_OK;
 						}
@@ -586,6 +625,15 @@ int CALLBACK WinMain(
 		0,
 		nullptr);
 
+
+	CreateThread(
+		nullptr,
+		0,
+		process_postmessages,
+		nullptr,
+		0,
+		nullptr);
+
 	// Main message loop:
 	MSG msg;
 	while (GetMessage(&msg, nullptr, 0, 0))
@@ -610,7 +658,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		if (web_view_window != nullptr) {
 			RECT bounds;
 			GetClientRect(hWnd, &bounds);
-			bounds.bottom = bounds.bottom - 5;
+			bounds.bottom = bounds.bottom - 45;
 			web_view_window->put_Bounds(bounds);
 		};
 		break;

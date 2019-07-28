@@ -29,7 +29,7 @@
         const eventSource = new EventSource('/eventsrc');
         eventSource.onmessage = (e) => {
             data = e.data;
-            console.log(data);
+            ;;console.log(data);
             if (data != "") {
                 handle_events(atob(data));
             }
@@ -351,20 +351,20 @@ height:20px;
     });
     // API
     function handle_events(data) {
-        console.log(event);
+        ;;console.log(event);
         var text = data;
 
         // evaluator
         var eval_reply = "::eval_reply:";
         if (text.indexOf(eval_reply) !== -1) {
-            console.log("eval reply", event);
+            ;;console.log("eval reply", event);
             result_editor.setValue(text.slice(eval_reply.length));
             // gettranscript();
         }
 
         var eval_pending = "::eval_pending:";
         if (text.indexOf(eval_pending) !== -1) {
-            console.log("eval pending", event);
+            ;;console.log("eval pending", event);
             return;
         }
 
@@ -372,7 +372,7 @@ height:20px;
         // api calls.
         var api_reply = "::api_reply:";
         if (text.indexOf(api_reply) !== -1) {
-            console.log("api reply", event);
+            ;;console.log("api reply", event);
 
 
             // api 1 get transcript text response
@@ -424,13 +424,13 @@ height:20px;
         }
 
         if (text.indexOf("::busy_reply:") !== -1) {
-            console.log("busy reply", event);
+            ;;console.log("busy reply", event);
             result_editor.setValue("scheme engine is busy");
             return;
         }
 
         if (text.indexOf("::invalid_request:") !== -1) {
-            console.log("invalid request", event);
+            ;;console.log("invalid request", event);
             result_editor.setValue("request was not recognized:\n" + text);
             return;
         }

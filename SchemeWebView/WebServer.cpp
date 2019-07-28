@@ -6,7 +6,7 @@
 #include <fmt/format.h>
 #include <scheme/scheme.h>
 #include "commonview.h"
- 
+
 
 // web server
 // one web server runs at a time.
@@ -19,7 +19,7 @@ HANDLE g_web_server;
 std::string get_exe_folder();
 void web_view_exec(const std::wstring& script);
 void  wait(const long ms);
- 
+
 
 
 // wait for scheme engine.
@@ -107,32 +107,68 @@ static std::string base64_encode(const std::string& in) {
 
 uint64_t event_id;
 std::string create_event(uint64_t offset) {
-
+	static long sleep_time = 0;
 	std::string eventdata;
-	if (event_id == 0)
-		eventdata = "retry: 15000\n\n";
-	else
-	{
-		eventdata += "id: ";
-		eventdata += std::to_string(event_id);
 
-		while (messages.empty())
-		{
+	if (event_id < 4) {
+		if (event_id == 0) {
+			eventdata = "retry: 15000\n\n";
 			Sleep(10);
-		};
-		WaitForSingleObject(g_messages_mutex, INFINITE);
-		if (!messages.empty())
-		{
-			eventdata += "\ndata:" + base64_encode(messages.front()) + "\n\n";
-			messages.pop_front();
+			event_id++;
+			return eventdata;
 		}
-
-		ReleaseMutex(g_messages_mutex);
+		else
+			if (event_id == 1) {
+				eventdata = ":wake_up n\n";
+				Sleep(10);
+				event_id++;
+				return eventdata;
+			}
+			else
+				if (event_id == 2) {
+					eventdata = ":and smell the n\n";
+					Sleep(10);
+					event_id++;
+					return eventdata;
+				}
+				else
+					if (event_id == 3) {
+						eventdata = ":coffee.. n\n";
+						Sleep(10);
+						event_id++;
+						return eventdata;
+					}
 	}
+
+	eventdata += "id: ";
+	eventdata += std::to_string(event_id);
+
+	while (messages.empty())
+	{
+		sleep_time += 20;
+		Sleep(20);
+		if (sleep_time > 15000)
+		{
+			sleep_time = 0;
+			eventdata = ":keep_awake n\n";
+			Sleep(20);
+			return eventdata;
+		}
+	};
+
+	WaitForSingleObject(g_messages_mutex, INFINITE);
+	if (!messages.empty())
+	{
+		eventdata += "\ndata:" + base64_encode(messages.front()) + "\n\n";
+		messages.pop_front();
+		Sleep(0);
+	}
+	ReleaseMutex(g_messages_mutex);
+
 
 	event_id++;
 	Sleep(0);
-	return eventdata.c_str();
+	return eventdata;
 }
 
 void cancel_messages()
@@ -310,14 +346,14 @@ DWORD WINAPI start_server(LPVOID p)
 					}
 
 					std::string v1;
-				 
+
 					for (const auto& param : req.params)
 					{
 						if (param.first == "v1")
 							v1 = param.second;
-					 
+
 					}
-					const auto result = do_scheme_api_call(n,v1);
+					const auto result = do_scheme_api_call(n, v1);
 					if (result.empty())
 					{
 						res.set_content(";; error response", "text/plain");
@@ -336,7 +372,7 @@ DWORD WINAPI start_server(LPVOID p)
 				res.set_content("Error", "text/plain");
 				return;
 			});
- 
+
 			// generic API call handler with call number and params.
 			svr.Post(R"(/api/(\d+))", [](const Request& req, Response& res) {
 				const auto numbers = req.matches[1];
@@ -357,9 +393,9 @@ DWORD WINAPI start_server(LPVOID p)
 						return;
 					}
 					const auto v1 = req.body;
-				 
+
 					const auto result = do_scheme_api_call(n, v1);
-					if(result.empty())
+					if (result.empty())
 					{
 						res.set_content(";; error response", "text/plain");
 						return;
@@ -400,7 +436,7 @@ DWORD WINAPI start_server(LPVOID p)
 
 		}
 		catch (...) {
-			
+
 			ReleaseMutex(g_web_server);
 			return 0;
 		}

@@ -22,6 +22,7 @@ DWORD WINAPI  garbage_collect(LPVOID cmd);
 std::wstring s2_ws(const std::string& str);
 extern std::wstring navigate_first;
 ptr scheme_web_view_exec(const char* cmd, char* cbname);
+ptr scheme_web_view_value(const char* cmd, char* vname);
 ptr scheme_web_view_exec_threaded(const char* cmd, char* cbname);
 ptr scheme_load_document_from_file(const char* relative_file_name);
 ptr scheme_wait(int ms);
@@ -41,6 +42,7 @@ extern bool cancelling;
 void do_events(int turns);
 extern std::deque<std::string> messages;
 extern std::deque<std::string> commands;
+extern std::deque<std::wstring> post_messages;
 
 namespace Assoc {
 	ptr cons_sfixnum(const char* symbol, const int value, ptr l);

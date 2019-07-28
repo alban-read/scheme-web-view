@@ -4,11 +4,7 @@
 
 [Simple Examples](simpleexamples.html)
 
-Topic 2
-
-
-
-
+[Simple Text Examples](simpletextexamples.html)
 
 [Scheme Programming language](https://www.scheme.com/tspl4)
 

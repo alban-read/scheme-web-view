@@ -32,6 +32,10 @@
   (lambda (script fname)
     ((foreign-procedure "web_exec" (string string) ptr) script fname)))
 
+(define web-value
+  (lambda (script vname)
+    ((foreign-procedure "web_value" (string string) ptr) script vname)))
+
 (define web-message-channel
   (lambda (msg)
     ((foreign-procedure "scheme_post_message" (string) ptr) msg )))
@@ -326,9 +330,16 @@
 
 (vector-set! api-calls 6 api-call-save-evaluator-text)
 
- 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; change the port here as required.
 
-(homepage "http://localhost:8087/editor.html")
-(startserver 8087 "docs")  
+;; graphics 2d
+;; 
+
+(define draw-line
+  (lambda (x y x1 y1 w)
+    (let ([cmd (format
+       (string-append "draw_line ( ~s, ~s, ~s, ~s, ~s)")
+            x y x1 y1 w)])
+      (web-eval cmd))))
+
+ 
+

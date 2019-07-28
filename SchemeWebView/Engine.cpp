@@ -177,6 +177,8 @@ int start_scheme_engine() {
 		Sforeign_symbol("start_web_server", static_cast<ptr>(scheme_start_web_server));
 		Sforeign_symbol("EscapeKeyPressed", static_cast<ptr>(EscapeKeyPressed));
 		Sforeign_symbol("web_exec", static_cast<ptr>(scheme_web_view_exec));
+		Sforeign_symbol("web_value", static_cast<ptr>(scheme_web_view_value));
+	
 		Sforeign_symbol("web_load_document", static_cast<ptr>(scheme_load_document_from_file));
 		Sforeign_symbol("scheme_wait", static_cast<ptr>(scheme_wait));
 		Sforeign_symbol("scheme_yield", static_cast<ptr>(scheme_yield));
