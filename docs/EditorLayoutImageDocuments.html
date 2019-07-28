@@ -36,7 +36,15 @@
         };
 
     </script>
-
+<style>
+transcript# {
+height:20px;
+}
+results# {
+height:20px;
+}
+</style>
+ 
 </head>
 
 <body onload="pageloaded()">
@@ -88,7 +96,7 @@
                 <div class="panel-top">
                     <div class="panel-container">
                         <div class="panel-left" id="top-left">
-                            <iframe src="HelpIndex.html" width="98%" height="98%" id="documentation"></iframe>
+                            <iframe   src="HelpIndex.html" width="98%" height="98%" id="documentation"></iframe>
                         </div>
                         <div class="splitter">
                         </div>
@@ -104,34 +112,34 @@
                 <div class="panel-bottom">
                     <div class="panel-container">
                         <div class="panel-left">
-                            <textarea id='expression' width='50%'></textarea>
+                            <textarea id='expression' width='20%'>; expressions</textarea>
                         </div>
-                        <div class="splitter">
+                          <div class="splitter">
                         </div>
-                        <div class="panel-right">
-                            <textarea id='transcript'></textarea>
+                        <div class="panel-bottom-right">
+						   <div id="div2-1" style="height:60%;">
+								<textarea id='transcript'></textarea>
+							</div>
+							<div id="div2-2" style="height:40%;">
+								<textarea id='results'></textarea>
+							</div>
+											 
+						 
+						 
+           
+                      
+						
+						   
                         </div>
                     </div>
                 </div>
 
-                <div class="splitter-horizontal">
-                </div>
-                <div class="panel-bottom">
-                    <div class="panel-container">
-                        <div class="panel-left">
-                            <textarea id='result' width='100%'></textarea>
-                        </div>
-                        <div class="splitter">
-                        <div class="panel-right">
-                        
-                        </div>  
-                    </div>
-                </div>
+               
             </div>
 
         </div>
-    </div>
-    </div>
+    
+  
 
 
 </body>
@@ -320,16 +328,7 @@
         markParen: function (span, good) { addClass(span, good ? "good-matching-paren" : "bad-matching-paren"); },
         unmarkParen: function (span) { removeClass(span, "good-matching-paren"); removeClass(span, "bad-matching-paren"); }
     });
-    var result_editor = CodeMirror.fromTextArea(result, {
-        lineNumbers: true, mode: "scheme",
-        autoMatchParens: true,
-        disableSpellcheck: true,
-        extraKeys: {
-            "Ctrl-L": function (cm) {
-                clearresults();
-            },
-        }
-    });
+   
     var transcript_editor = CodeMirror.fromTextArea(transcript, {
         disableSpellcheck: true,
         lineNumbers: true,
@@ -339,7 +338,17 @@
             },
         }
     });
-
+	
+    var result_editor = CodeMirror.fromTextArea(results, {
+        lineNumbers: true, mode: "scheme",
+        autoMatchParens: true,
+        disableSpellcheck: true,
+        extraKeys: {
+            "Ctrl-L": function (cm) {
+                clearresults();
+            },
+        }
+    });
     // API
     function handle_events(data) {
         console.log(event);
@@ -350,7 +359,7 @@
         if (text.indexOf(eval_reply) !== -1) {
             console.log("eval reply", event);
             result_editor.setValue(text.slice(eval_reply.length));
-            return;
+            // gettranscript();
         }
 
         var eval_pending = "::eval_pending:";

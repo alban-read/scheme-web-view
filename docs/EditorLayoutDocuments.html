@@ -77,36 +77,30 @@
         </div>
 
         <div class="bg-image">
-            <div class="panel-container-vertical">
-
-                <div class="panel-top">
+         
                     <div class="panel-container">
-                        <div class="panel-left" id="top-left">
+                        <div class="panel-left" id="top-left" height="98%">
                             <iframe src="HelpIndex.html" width="98%" height="98%" id="documentation"></iframe>
                         </div>
                         <div class="splitter">
                         </div>
                         <div class="panel-top-right">
-                            <textarea id='expression'></textarea>
-                        </div>
+						 <div id="div2-0" style="height:60%;">
+								<textarea id='expression'></textarea>
+							</div>
+						 <div class="splitter-horizontal">
+                         </div>
+						  <div id="div2-1" style="height:30%;">
+								<textarea id='transcript'></textarea>
+							</div>
+							<div id="div2-2" style="height:10%;">
+								<textarea id='result'></textarea>
+							</div>
+						</div>
                     </div>
-                </div>
-                <div class="splitter-horizontal">
-                </div>
-                <div class="panel-bottom">
-                    <div class="panel-container">
-                        <div class="panel-left">
-                            <textarea id='result'></textarea>
-                        </div>
-                        <div class="splitter">
-                        </div>
-                        <div class="panel-right">
-                            <textarea id='transcript' width='100%'></textarea>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+               
+               
+       
     </div>
 
 
@@ -118,7 +112,7 @@
         handleSelector: ".splitter",
         resizeHeight: false
     });
-    $(".panel-top").resizable({
+    $(".panel-top-right").resizable({
         handleSelector: ".splitter-horizontal",
         resizeWidth: false
     });

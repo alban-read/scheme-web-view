@@ -55,7 +55,7 @@ body {
 .panel-left {
     flex: 0 0 auto;
     /* only manually resize */
-    padding: 2px;
+    padding: 1px;
     width: 50%;
     min-height: 100px;
     white-space: nowrap;
@@ -67,19 +67,19 @@ body {
     width: 6px;
     overflow: hidden;
     cursor: col-resize;
-    padding: 3px;
+    padding: 1px;
 }
 
 .panel-right {
     flex: 1 1 auto;
-    padding: 2px;
-    min-height: 100px;
+    padding: 1px;
+    min-height: 50px;
     color: white;
 }
 
 .panel-top-right {
     flex: 1 1 auto;
-    padding: 2px;
+    padding: 1px;
     color: white;
     width: 100%;
     height: 98%;
@@ -100,8 +100,8 @@ body {
     flex: 0 0 auto;
     padding-left: 12px;
     padding-right: 12px;
-    padding-bottom: 2px;
-    padding-top: 2px;
+    padding-bottom: 1px;
+    padding-top: 1px;
     min-height: 100px;
     height: 60%;
     width: 98%;
@@ -111,7 +111,7 @@ body {
 
 .splitter-horizontal {
     flex: 0 0 auto;
-    height: 8px;
+    height: 4px;
     cursor: row-resize;
 }
 
@@ -119,19 +119,28 @@ body {
     flex: 1 1 auto;
     padding-left: 12px;
     padding-right: 4px;
-    padding-bottom: 2px;
-    padding-top: 2px;
+    padding-bottom: 1px;
+    padding-top: 1px;
     height: 30%;
     width: 100%;
+
 }
+
+.panel-bottom-right{
+    flex: 1 1 auto;
+    padding-left: 12px;
+    padding-right: 4px;
+    padding-bottom: 1px;
+    padding-top: 1px;
+	overflow: hidden;
+}
+
 
 textarea {
     width: 100%;
-    height: 100%
 }
 
 .textarea {
-    min-height: 4rem;
     overflow: auto;
 }
 
@@ -145,3 +154,9 @@ textarea {
     padding: 20px;
     display: block;
 }
+
+
+ #documentation { 
+  width: 100%; height: 98%; 
+
+ }
