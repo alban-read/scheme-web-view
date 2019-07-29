@@ -43,17 +43,14 @@
     <div class="page-container">
         <div class="btn-group" style="margin-left: 12px;">
  
-            <button class="btn btn-light btn-sm">
-                <a href="#" onclick='evaluatedocexpression();return false;'>
-                    <i class="fa fa-play" aria-hidden="true" style="color: #5c809e"></i>
-                </a>
+            <button class="btn btn-light btn-sm" onclick='evaluatedocexpression();return false;'>
+                <i class="fa fa-play" aria-hidden="true" style="color: #5c809e"></i>
             </button>
-            <button class="btn btn-light btn-sm">
 
-                <a href="#" onclick='refreshpage();return false;'>
+            <button class="btn btn-light btn-sm" onclick='refreshpage();return false;'>
                     <i class="fa fa-refresh" aria-hidden="true" style="color: #5c809e"></i>
-                </a>
             </button>
+
 
             <button class="btn btn-light btn-sm">
                 <a href="#"  onclick='cancelmessage();return false;'> 
@@ -237,7 +234,7 @@
     function pageloaded() {
         getexpressions();
         gettranscript();
-
+ 
     }
 
     function pageloaded() {

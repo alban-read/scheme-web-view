@@ -48,16 +48,12 @@
                     <i class="fa fa-book" aria-hidden="true" style="color: #5c809e"></i>
                 </a>
             </button>
-            <button class="btn btn-light btn-sm">
-                <a href="#" onclick='evaluateexpression();return false;'>
-                    <i class="fa fa-play" aria-hidden="true" style="color: #5c809e"></i>
-                </a>
+            <button class="btn btn-light btn-sm" onclick='evaluateexpression();return false;'>
+                <i class="fa fa-play" aria-hidden="true" style="color: #5c809e"></i>
             </button>
-            <button class="btn btn-light btn-sm">
 
-                <a href="#" onclick='refreshpage();return false;'>
+            <button class="btn btn-light btn-sm" onclick='refreshpage();return false;'>
                     <i class="fa fa-refresh" aria-hidden="true" style="color: #5c809e"></i>
-                </a>
             </button>
 
             <button class="btn btn-light btn-sm">
@@ -234,6 +230,7 @@
         getexpressions();
         gettranscript();
         refreshCanvas();
+ 
     }
 
     window.resize = function () {

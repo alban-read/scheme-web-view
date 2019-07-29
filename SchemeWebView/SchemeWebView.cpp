@@ -150,7 +150,7 @@ void web_view_exec(const std::wstring& script) {
 }
 
 std::deque<std::wstring> post_messages;
- 
+
 ptr scheme_post_message(const char* msg) {
 	WaitForSingleObject(g_messages_mutex, INFINITE);
 	post_messages.emplace_back(s2_ws(msg));
@@ -159,24 +159,19 @@ ptr scheme_post_message(const char* msg) {
 }
 
 DWORD WINAPI process_postmessages(LPVOID x) {
- 
+
 	while (true) {
 
 		while (post_messages.empty())
 		{
 			Sleep(20);
 		};
+		WaitForSingleObject(g_messages_mutex, INFINITE);
 		while (!post_messages.empty()) {
-			WaitForSingleObject(g_messages_mutex, INFINITE);
-			if (!post_messages.empty())
-			{
-				post_messages.pop_front();
-				web_view_window->PostWebMessageAsString(post_messages.front().c_str());
-			 
-			}
-			ReleaseMutex(g_messages_mutex);
+			web_view_window->PostWebMessageAsString(post_messages.front().c_str());
+			post_messages.pop_front();
 		}
-		
+		ReleaseMutex(g_messages_mutex);
 	}
 }
 
@@ -190,7 +185,7 @@ ptr scheme_post_message_eventsource(const char* msg) {
 	return Strue;
 }
 
- 
+
 // scheme call into web view.
 ptr scheme_web_view_exec(const char* cmd, char* cbname)
 {
@@ -202,19 +197,14 @@ ptr scheme_web_view_exec(const char* cmd, char* cbname)
 		[callback](HRESULT errorCode, LPCWSTR resultObjectAsJson)->HRESULT {
 
 		LPCWSTR S = resultObjectAsJson;
-
 		if (!callback.empty() && S != nullptr && wcslen(S) > 0) {
 			const auto param = _strdup(ws_2s(S).c_str());
-			WaitForSingleObject(g_script_mutex, INFINITE);
-			{
-				if(Sprocedurep(Sstring_to_symbol(callback.c_str())))
-					CALL1(callback.c_str(), Sstring(param));
-			}
-			ReleaseMutex(g_script_mutex);
+			std::string command = fmt::format("({0} {1})", callback, param);
+			eval_text(_strdup(command.c_str()));
 		}
 		return S_OK;
 	}).Get());
- 
+
 	return Strue;
 }
 
@@ -383,7 +373,7 @@ bool check_valid_uri()
 	std::size_t found = source.find(base);
 	return found != std::string::npos;
 }
- 
+
 int CALLBACK WinMain(
 	_In_ HINSTANCE hInstance,
 	_In_ HINSTANCE hPrevInstance,
@@ -448,7 +438,7 @@ int CALLBACK WinMain(
 		return 1;
 	}
 	main_window = hWnd;
- 
+
 
 	auto s = init_web_server();
 	// Locate the browser and set up the environment for WebView
@@ -542,7 +532,7 @@ int CALLBACK WinMain(
 				if (text.rfind(eval_cmd, 0) == 0) {
 					// eval in own thread.
 					std::string command = text.c_str() + strlen(eval_cmd);
-			 
+
 					eval_text(command.c_str());
 					Sleep(0);
 					return S_OK;
@@ -567,7 +557,7 @@ int CALLBACK WinMain(
 
 						std::string param = end_ptr;
 						// browser to scheme api call
-				 
+
 						const ptr scheme_string = CALL2("api-call", Sfixnum(n), Sstring(param.c_str()));
 
 						std::string result;
@@ -591,7 +581,7 @@ int CALLBACK WinMain(
 						cancel_commands();
 						return S_OK;
 						break;
-				 
+
 					default:
 						break;
 					}
@@ -663,7 +653,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		};
 		break;
 
- 
+
 
 	case WM_DESTROY:
 		PostQuitMessage(0);

@@ -29,9 +29,10 @@
     <script>
         const eventSource = new EventSource('/eventsrc');
         eventSource.onmessage = (e) => {
-            data = e.data;
-            if (data != "") {
-                handle_events(atob(data));
+            data = atob(e.data);
+            console.log("data:\n", data)
+            if (data !== "") {
+                handle_events(data);
             }
         };
     </script>
@@ -51,28 +52,25 @@
 
 <body onload="pageloaded()">
     <div class="page-container">
-        
+
         <div class="btn-group" style="margin-left: 12px;">
             <button class="btn btn-light btn-sm">
                 <a href="https://www.scheme.com/tspl4/" target="_blank">
                     <i class="fa fa-book" aria-hidden="true" style="color: #5c809e"></i>
                 </a>
             </button>
-            <button class="btn btn-light btn-sm">
-                <a href="#" onclick='evaluateexpression();return false;'>
-                    <i class="fa fa-play" aria-hidden="true" style="color: #5c809e"></i>
-                </a>
-            </button>
-            <button class="btn btn-light btn-sm">
-
-                <a href="#" onclick='refreshpage();return false;'>
-                    <i class="fa fa-refresh" aria-hidden="true" style="color: #5c809e"></i>
-                </a>
-            </button>
             
+            <button class="btn btn-light btn-sm" onclick='evaluateexpression();return false;'>
+                <i class="fa fa-play" aria-hidden="true" style="color: #5c809e"></i>
+            </button>
+
+            <button class="btn btn-light btn-sm" onclick='refreshpage();return false;'>
+                    <i class="fa fa-refresh" aria-hidden="true" style="color: #5c809e"></i>
+            </button>
+
             <button class="btn btn-light btn-sm">
-                <a href="#"  onclick='cancelmessage();return false;'> 
-                <i class="fa fa-stop-circle" aria-hidden="true" style="color: #5c809e"></i>
+                <a href="#" onclick='cancelmessage();return false;'>
+                    <i class="fa fa-stop-circle" aria-hidden="true" style="color: #5c809e"></i>
                 </a>
             </button>
 
@@ -161,6 +159,8 @@
     // save and reload.
     function refreshpage() {
         refreshOnexpressionsSaved()
+        window.chrome.webview.postMessage('::eval:(display version)');
+        window.chrome.webview.postMessage('::eval:(newline)');
     }
 
     function cancelmessage() {
@@ -292,19 +292,19 @@
     // unlike a normal web client we have a direct message channel
     // or we can listen to sse.
     function handle_events(data) {
- 
+
         var text = data;
- 
+
         var eval_reply = "::eval_reply:";
         if (text.indexOf(eval_reply) !== -1) {
-            ;;console.log("eval reply", event);
+            ;; console.log("eval reply", event);
             result_editor.setValue(text.slice(eval_reply.length));
             return;
         }
 
         var eval_pending = "::eval_pending:";
         if (text.indexOf(eval_pending) !== -1) {
-            ;;console.log("eval pending", event);
+            ;; console.log("eval pending", event);
             return;
         }
 
@@ -312,7 +312,7 @@
         // api calls.
         var api_reply = "::api_reply:";
         if (text.indexOf(api_reply) !== -1) {
-           ;; console.log("api reply", event);
+            ;; console.log("api reply", event);
 
 
             // api 1 get transcript text response
@@ -358,7 +358,7 @@
         }
 
         if (text.indexOf("::busy_reply:") !== -1) {
-           ;; console.log("busy reply", event);
+            ;; console.log("busy reply", event);
             result_editor.setValue("scheme engine is busy");
         }
         if (text.indexOf("::invalid_request:") !== -1) {

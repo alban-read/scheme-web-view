@@ -26,24 +26,19 @@
     </script>
 
     <script>
+        
         const eventSource = new EventSource('/eventsrc');
         eventSource.onmessage = (e) => {
-            data = e.data;
-            ;;console.log(data);
-            if (data != "") {
-                handle_events(atob(data));
+            data = atob(e.data);
+            console.log("data:\n", data)
+            if (data !== "") {
+                handle_events(data);
             }
         };
+ 
 
     </script>
-<style>
-transcript# {
-height:20px;
-}
-results# {
-height:20px;
-}
-</style>
+ 
  
 </head>
 
@@ -51,16 +46,12 @@ height:20px;
     <div class="page-container">
         <div class="btn-group" style="margin-left: 12px;">
 
-            <button class="btn btn-light btn-sm">
-                <a href="#" onclick='evaluatedocexpression();return false;'>
-                    <i class="fa fa-play" aria-hidden="true" style="color: #5c809e"></i>
-                </a>
+            <button class="btn btn-light btn-sm" onclick='evaluatedocexpression();return false;'>
+                <i class="fa fa-play" aria-hidden="true" style="color: #5c809e"></i>
             </button>
-            <button class="btn btn-light btn-sm">
 
-                <a href="#" onclick='refreshpage();return false;'>
+            <button class="btn btn-light btn-sm" onclick='refreshpage();return false;'>
                     <i class="fa fa-refresh" aria-hidden="true" style="color: #5c809e"></i>
-                </a>
             </button>
 
             <button class="btn btn-light btn-sm">
@@ -124,10 +115,6 @@ height:20px;
 								<textarea id='results'></textarea>
 							</div>
 											 
-						 
-						 
-           
-                      
 						
 						   
                         </div>
@@ -212,6 +199,7 @@ height:20px;
         getexpressions();
         gettranscript();
         refreshCanvas();
+     
     }
 
     window.resize = function () {

@@ -1,5 +1,6 @@
  
- 
+ (define version "2019-29-07")
+
 (define escape-pressed?
   (lambda () ((foreign-procedure "EscapeKeyPressed" () ptr))))
 
