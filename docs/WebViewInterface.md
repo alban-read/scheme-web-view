@@ -31,13 +31,13 @@ Call a function in the browser; and run a callback returning the result.
 
 #### web-eval
 
-Evaluates the script; *just like using eval inside the script*; this returns no results.
+Evaluates the script; *just like using eval inside a script*; this returns no results.
 
 ```Scheme
 
 ```
 
-This is reasonably fast; it is implemented as a message from scheme to the web view; either using *post message as string*; or more quickly and less dangerously using server events.
+This is reasonably fast; it is implemented as a message from scheme to the web view; either using *post message as string*; or more quickly and less dangerously using server side events.
 
 
 

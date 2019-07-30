@@ -161,13 +161,13 @@ ptr scheme_post_message(const char* msg) {
 DWORD WINAPI process_postmessages(LPVOID x) {
 
 	while (true) {
-
-		while (post_messages.empty())
-		{
-			Sleep(20);
-		};
 		WaitForSingleObject(g_messages_mutex, INFINITE);
-		while (!post_messages.empty()) {
+		if (post_messages.empty())
+		{
+			ReleaseMutex(g_messages_mutex);
+			Sleep(20);
+		}
+		else {
 			web_view_window->PostWebMessageAsString(post_messages.front().c_str());
 			post_messages.pop_front();
 		}
@@ -233,8 +233,6 @@ ptr scheme_web_view_value(const char* cmd, char* vname)
 
 	return Strue;
 }
-
-
 
 
 std::wstring wide_get_exe_folder()
