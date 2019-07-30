@@ -53,13 +53,11 @@
             </button>
 
             <button class="btn btn-light btn-sm" onclick='refreshpage();return false;'>
-                    <i class="fa fa-refresh" aria-hidden="true" style="color: #5c809e"></i>
+                <i class="fa fa-refresh" aria-hidden="true" style="color: #5c809e"></i>
             </button>
 
-            <button class="btn btn-light btn-sm">
-                <a href="#"  onclick='cancelmessage();return false;'> 
+            <button class="btn btn-light btn-sm" onclick='cancelmessage();return false;'>
                 <i class="fa fa-stop-circle" aria-hidden="true" style="color: #5c809e"></i>
-                </a>
             </button>
 
             <button class="btn btn-light btn-sm">
@@ -74,10 +72,8 @@
                 </a>
             </button>
 
-            <button class="btn btn-light btn-sm">
-                <a href="#" onclick='refreshCanvas();return false;'>
-                    <i aria-hidden="true" style="color: #5c809e">Clear</i>
-                </a>
+            <button class="btn btn-light btn-sm" onclick='refreshCanvas();return false;'>
+                <i aria-hidden="true" style="color: #5c809e">Clear</i>
             </button>
 
 
@@ -153,7 +149,7 @@
     }
 
     function cancelmessage() {
-        ;;console.log("cancel");
+        ;; console.log("cancel");
         window.chrome.webview.postMessage('::api:1064');
     }
 
@@ -216,6 +212,10 @@
         ctx.stroke();
     }
 
+    function fill_rect(x, y, w, h) {
+        ctx.fillRect(x, y, w, h);
+    }
+
     function refreshCanvas() {
         canvas = document.getElementById("image");
         ctx = canvas.getContext("2d");
@@ -230,7 +230,7 @@
         getexpressions();
         gettranscript();
         refreshCanvas();
- 
+
     }
 
     window.resize = function () {
@@ -307,14 +307,14 @@
         // evaluator
         var eval_reply = "::eval_reply:";
         if (text.indexOf(eval_reply) !== -1) {
-            ;;console.log("eval reply", event);
+            ;; console.log("eval reply", event);
             result_editor.setValue(text.slice(eval_reply.length));
             return;
         }
 
         var eval_pending = "::eval_pending:";
         if (text.indexOf(eval_pending) !== -1) {
-            ;;console.log("eval pending", event);
+            ;; console.log("eval pending", event);
             return;
         }
 
@@ -365,11 +365,11 @@
         }
 
         if (text.indexOf("::busy_reply:") !== -1) {
-            ;;console.log("busy reply", event);
+            ;; console.log("busy reply", event);
             result_editor.setValue("scheme engine is busy");
         }
         if (text.indexOf("::invalid_request:") !== -1) {
-            ;;console.log("invalid request", event);
+            ;; console.log("invalid request", event);
             result_editor.setValue("request was not recognized:\n" + text);
         }
     }

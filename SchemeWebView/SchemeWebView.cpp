@@ -199,10 +199,11 @@ ptr scheme_web_view_exec(const char* cmd, char* cbname)
 		LPCWSTR S = resultObjectAsJson;
 		if (!callback.empty() && S != nullptr && wcslen(S) > 0) {
 			const auto param = _strdup(ws_2s(S).c_str());
-			std::string command = fmt::format("({0} {1})", callback, param);
+			const auto command = fmt::format("({0} {1})", callback, param);
 			eval_text(_strdup(command.c_str()));
 		}
 		return S_OK;
+
 	}).Get());
 
 	return Strue;

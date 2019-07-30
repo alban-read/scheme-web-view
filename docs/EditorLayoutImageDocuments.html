@@ -26,7 +26,7 @@
     </script>
 
     <script>
-        
+
         const eventSource = new EventSource('/eventsrc');
         eventSource.onmessage = (e) => {
             data = atob(e.data);
@@ -35,11 +35,11 @@
                 handle_events(data);
             }
         };
- 
+
 
     </script>
- 
- 
+
+
 </head>
 
 <body onload="pageloaded()">
@@ -51,13 +51,11 @@
             </button>
 
             <button class="btn btn-light btn-sm" onclick='refreshpage();return false;'>
-                    <i class="fa fa-refresh" aria-hidden="true" style="color: #5c809e"></i>
+                <i class="fa fa-refresh" aria-hidden="true" style="color: #5c809e"></i>
             </button>
 
-            <button class="btn btn-light btn-sm">
-                <a href="#"  onclick='cancelmessage();return false;'> 
+            <button class="btn btn-light btn-sm" onclick='cancelmessage();return false;'>
                 <i class="fa fa-stop-circle" aria-hidden="true" style="color: #5c809e"></i>
-                </a>
             </button>
 
             <button class="btn btn-light btn-sm">
@@ -72,10 +70,8 @@
                 </a>
             </button>
 
-            <button class="btn btn-light btn-sm">
-                    <a href="#" onclick='refreshCanvas();return false;'>
-                        <i aria-hidden="true" style="color: #5c809e">Clear</i>
-                    </a>
+            <button class="btn btn-light btn-sm" onclick='refreshCanvas();return false;'>
+                <i aria-hidden="true" style="color: #5c809e">Clear</i>
             </button>
 
 
@@ -87,12 +83,12 @@
                 <div class="panel-top">
                     <div class="panel-container">
                         <div class="panel-left" id="top-left">
-                            <iframe   src="HelpIndex.html" width="98%" height="98%" id="documentation"></iframe>
+                            <iframe src="HelpIndex.html" width="98%" height="98%" id="documentation"></iframe>
                         </div>
                         <div class="splitter">
                         </div>
                         <div class="panel-top-right" id="image_holder">
-                                <canvas id="image"></canvas>
+                            <canvas id="image"></canvas>
                         </div>
                     </div>
                 </div>
@@ -105,28 +101,28 @@
                         <div class="panel-left">
                             <textarea id='expression' width='20%'>; expressions</textarea>
                         </div>
-                          <div class="splitter">
+                        <div class="splitter">
                         </div>
                         <div class="panel-bottom-right">
-						   <div id="div2-1" style="height:60%;">
-								<textarea id='transcript'></textarea>
-							</div>
-							<div id="div2-2" style="height:40%;">
-								<textarea id='results'></textarea>
-							</div>
-											 
-						
-						   
+                            <div id="div2-1" style="height:60%;">
+                                <textarea id='transcript'></textarea>
+                            </div>
+                            <div id="div2-2" style="height:40%;">
+                                <textarea id='results'></textarea>
+                            </div>
+
+
+
                         </div>
                     </div>
                 </div>
 
-               
+
             </div>
 
         </div>
-    
-  
+
+
 
 
 </body>
@@ -172,8 +168,8 @@
         window.location.reload(true);
     }
 
- // access to draw on image.
- var canvas;
+    // access to draw on image.
+    var canvas;
     var ctx;
 
     // canvas related
@@ -183,6 +179,10 @@
         ctx.lineTo(x1, y1);
         ctx.lineWidth = w;
         ctx.stroke();
+    }
+
+    function fill_rect(x, y, w, h) {
+        ctx.fillRect(x, y, w, h);
     }
 
     function refreshCanvas() {
@@ -199,7 +199,7 @@
         getexpressions();
         gettranscript();
         refreshCanvas();
-     
+
     }
 
     window.resize = function () {
@@ -248,7 +248,7 @@
         var iframe = document.getElementById('documentation');
         var idoc = iframe.contentDocument || iframe.contentWindow.document;
         var text = idoc.getSelection().toString();
-        text= text.replace(/[^\x00-\x7F]/g, "");
+        text = text.replace(/[^\x00-\x7F]/g, "");
         if (text === "") {
             text = expression_editor.getValue();
         }
@@ -316,7 +316,7 @@
         markParen: function (span, good) { addClass(span, good ? "good-matching-paren" : "bad-matching-paren"); },
         unmarkParen: function (span) { removeClass(span, "good-matching-paren"); removeClass(span, "bad-matching-paren"); }
     });
-   
+
     var transcript_editor = CodeMirror.fromTextArea(transcript, {
         disableSpellcheck: true,
         lineNumbers: true,
@@ -326,7 +326,7 @@
             },
         }
     });
-	
+
     var result_editor = CodeMirror.fromTextArea(results, {
         lineNumbers: true, mode: "scheme",
         autoMatchParens: true,
@@ -339,20 +339,20 @@
     });
     // API
     function handle_events(data) {
-        ;;console.log(event);
+        ;; console.log(event);
         var text = data;
 
         // evaluator
         var eval_reply = "::eval_reply:";
         if (text.indexOf(eval_reply) !== -1) {
-            ;;console.log("eval reply", event);
+            ;; console.log("eval reply", event);
             result_editor.setValue(text.slice(eval_reply.length));
             // gettranscript();
         }
 
         var eval_pending = "::eval_pending:";
         if (text.indexOf(eval_pending) !== -1) {
-            ;;console.log("eval pending", event);
+            ;; console.log("eval pending", event);
             return;
         }
 
@@ -360,7 +360,7 @@
         // api calls.
         var api_reply = "::api_reply:";
         if (text.indexOf(api_reply) !== -1) {
-            ;;console.log("api reply", event);
+            ;; console.log("api reply", event);
 
 
             // api 1 get transcript text response
@@ -412,13 +412,13 @@
         }
 
         if (text.indexOf("::busy_reply:") !== -1) {
-            ;;console.log("busy reply", event);
+            ;; console.log("busy reply", event);
             result_editor.setValue("scheme engine is busy");
             return;
         }
 
         if (text.indexOf("::invalid_request:") !== -1) {
-            ;;console.log("invalid request", event);
+            ;; console.log("invalid request", event);
             result_editor.setValue("request was not recognized:\n" + text);
             return;
         }

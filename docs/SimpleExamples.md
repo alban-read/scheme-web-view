@@ -25,6 +25,8 @@
 ;;
 ```
 
+*This does test that messages are not lost; and they arrive in order.*
+
 ---
 
 ##### Draw random lines on canvas
@@ -35,8 +37,8 @@
 (define draw-line
   (lambda (x y x1 y1 w)
     (let ([cmd (format
-                 (string-append "draw_line ( ~s, ~s, ~s, ~s, ~s)")
-                	x y x1 y1 w)])
+      (string-append "draw_line ( ~s, ~s, ~s, ~s, ~s)")
+          x y x1 y1 w)])
       (web-eval cmd))))
 ;;
 ;; 100 random lines.
@@ -49,6 +51,8 @@
 ;;
 ;;
 ```
+
+*This is a good test of the message channel from scheme to the web view*
 
 --------
 
@@ -102,4 +106,65 @@
 ;;
 ;;
 ```
+
+----
+
+#### Draw Fern 
+
+*First select and run entire; then select and run function fern function repeatedly.*
+
+```Scheme
+
+;; fractal fern 
+(web-eval "ctx.fillStyle = 'green';")
+
+(define x 250.0)
+(define y 200.0)
+(define x0 0.0)
+(define y0 0.0)
+
+(define transform
+  (lambda ()
+    (set! x0 x)
+    (set! y0 y)
+    (let ([r (random 100)])
+      (cond
+        [(< r 1) 
+         (begin 
+           (set! x 0.0) 
+           (set! y (* 0.16 y0)))]
+        [(< r 86)
+         (begin
+           (set! x (+ (* 0.85 x0) (* 0.04 y0)))
+           (set! y (+ (* -0.04 x0) (* 0.85 y0) 1.6)))]
+        [(< r 93)
+         (begin
+           (set! x (+ (* 0.2 x0) (* -0.26 y0)))
+           (set! y (+ (* 0.23 x0) (* 0.22 y0) 1.6)))]
+        [else
+         (begin
+           (set! x (+ (* -0.15 x0) (* 0.28 y0)))
+           (set! y (+ (* 0.26 x0) (* 0.24 y0) 0.44)))]))))
+
+(define draw-point
+  (lambda ()
+    (fill-rect (+ (* x 50) 200)
+               (- 500 (- (* y 50) 10))
+               1 1)))
+
+(define fern
+  (lambda () (dotimes 100 (transform) (draw-point))))
+
+;; repeat me...
+(fern)
+
+```
+
+Repeat (fern) until the image appears.
+
+*filling a rectangle of 1,1 is the fastest way to draw repeated points of the same colour.*
+
+---
+
+
 

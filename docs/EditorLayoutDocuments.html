@@ -29,7 +29,7 @@
         const eventSource = new EventSource('/eventsrc');
         eventSource.onmessage = (e) => {
             data = e.data;
-            ;;console.log(data);
+            ;; console.log(data);
             if (data != "") {
                 handle_events(atob(data));
             }
@@ -42,20 +42,17 @@
 <body onload="pageloaded()">
     <div class="page-container">
         <div class="btn-group" style="margin-left: 12px;">
- 
+
             <button class="btn btn-light btn-sm" onclick='evaluatedocexpression();return false;'>
                 <i class="fa fa-play" aria-hidden="true" style="color: #5c809e"></i>
             </button>
 
             <button class="btn btn-light btn-sm" onclick='refreshpage();return false;'>
-                    <i class="fa fa-refresh" aria-hidden="true" style="color: #5c809e"></i>
+                <i class="fa fa-refresh" aria-hidden="true" style="color: #5c809e"></i>
             </button>
 
-
-            <button class="btn btn-light btn-sm">
-                <a href="#"  onclick='cancelmessage();return false;'> 
+            <button class="btn btn-light btn-sm" onclick='cancelmessage();return false;'>
                 <i class="fa fa-stop-circle" aria-hidden="true" style="color: #5c809e"></i>
-                </a>
             </button>
 
             <button class="btn btn-light btn-sm">
@@ -69,36 +66,34 @@
                     <i aria-hidden="true" style="color: #5c809e">Image</i>
                 </a>
             </button>
-
-
         </div>
 
         <div class="bg-image">
-         
-                    <div class="panel-container">
-                        <div class="panel-left" id="top-left" height="98%">
-                            <iframe src="HelpIndex.html" width="98%" height="98%" id="documentation"></iframe>
-                        </div>
-                        <div class="splitter">
-                        </div>
-                        <div class="panel-top-right">
-						 <div id="div2-0" style="height:60%;">
-								<textarea id='expression'></textarea>
-							</div>
-						 <div class="splitter-horizontal">
-                         </div>
-						  <div id="div2-1" style="height:30%;">
-								<textarea id='transcript'></textarea>
-							</div>
-							<div id="div2-2" style="height:10%;">
-								<textarea id='result'></textarea>
-							</div>
-						</div>
+
+            <div class="panel-container">
+                <div class="panel-left" id="top-left" height="98%">
+                    <iframe src="HelpIndex.html" width="98%" height="98%" id="documentation"></iframe>
+                </div>
+                <div class="splitter">
+                </div>
+                <div class="panel-top-right">
+                    <div id="div2-0" style="height:60%;">
+                        <textarea id='expression'></textarea>
                     </div>
-               
-               
-       
-    </div>
+                    <div class="splitter-horizontal">
+                    </div>
+                    <div id="div2-1" style="height:30%;">
+                        <textarea id='transcript'></textarea>
+                    </div>
+                    <div id="div2-2" style="height:10%;">
+                        <textarea id='result'></textarea>
+                    </div>
+                </div>
+            </div>
+
+
+
+        </div>
 
 
 </body>
@@ -189,7 +184,7 @@
         var iframe = document.getElementById('documentation');
         var idoc = iframe.contentDocument || iframe.contentWindow.document;
         var text = idoc.getSelection().toString();
-        text= text.replace(/[^\x00-\x7F]/g, "");
+        text = text.replace(/[^\x00-\x7F]/g, "");
         if (text === "") {
             text = expression_editor.getValue();
             localStorage.setItem("lastExpression", text);
@@ -234,7 +229,7 @@
     function pageloaded() {
         getexpressions();
         gettranscript();
- 
+
     }
 
     function pageloaded() {
@@ -308,14 +303,14 @@
         // evaluator
         var eval_reply = "::eval_reply:";
         if (text.indexOf(eval_reply) !== -1) {
-            ;;console.log("eval reply", event);
+            ;; console.log("eval reply", event);
             result_editor.setValue(text.slice(eval_reply.length));
             // gettranscript();
         }
 
         var eval_pending = "::eval_pending:";
         if (text.indexOf(eval_pending) !== -1) {
-            ;;console.log("eval pending", event);
+            ;; console.log("eval pending", event);
             return;
         }
 
@@ -323,7 +318,7 @@
         // api calls.
         var api_reply = "::api_reply:";
         if (text.indexOf(api_reply) !== -1) {
-     
+
 
 
             // api 1 get transcript text response
@@ -369,11 +364,11 @@
         }
 
         if (text.indexOf("::busy_reply:") !== -1) {
-            ;;console.log("busy reply", event);
+            ;; console.log("busy reply", event);
             result_editor.setValue("scheme engine is busy");
         }
         if (text.indexOf("::invalid_request:") !== -1) {
-            ;;console.log("invalid request", event);
+            ;; console.log("invalid request", event);
             result_editor.setValue("request was not recognized:\n" + text);
         }
     }
