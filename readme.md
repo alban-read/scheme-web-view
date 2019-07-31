@@ -49,6 +49,9 @@ Some features of Chez Scheme are deeply linked into the core of its terminal lov
 
 There is a Wiki here with notes.
 
+Including a ![gallery](https://github.com/alban-read/scheme-web-view/wiki/Gallery) with pictures. 
+
+
 And other readme files; as I do write documentation.
 
 #### Building
