@@ -2,7 +2,7 @@
 body {
     height: 100%;
     font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
-    padding: 0;
+    padding:1px;
     margin: 0;
     background-color: #7F8E99;
     background-image: url("woven.png");
@@ -67,7 +67,7 @@ body {
     width: 6px;
     overflow: hidden;
     cursor: col-resize;
-    padding: 1px;
+    padding: 0px;
 }
 
 .panel-right {
@@ -92,16 +92,19 @@ body {
 .panel-container-vertical {
     display: flex;
     flex-direction: column;
-    height: 95%;
+    height: 98%;
     overflow: hidden;
+}
+
+iframe {
+    flex: 0 0 auto;
+    padding:1px;
+    border: 0px;
 }
 
 .panel-top {
     flex: 0 0 auto;
-    padding-left: 12px;
-    padding-right: 12px;
-    padding-bottom: 1px;
-    padding-top: 1px;
+    padding:1px;
     min-height: 100px;
     height: 60%;
     width: 98%;
@@ -117,10 +120,7 @@ body {
 
 .panel-bottom {
     flex: 1 1 auto;
-    padding-left: 12px;
-    padding-right: 4px;
-    padding-bottom: 1px;
-    padding-top: 1px;
+    padding:1px;
     height: 30%;
     width: 100%;
 
@@ -128,12 +128,10 @@ body {
 
 .panel-bottom-right{
     flex: 1 1 auto;
-    padding-left: 12px;
-    padding-right: 4px;
-    padding-bottom: 1px;
-    padding-top: 1px;
+    padding: 1px;
 	overflow: hidden;
 }
+
 
 
 textarea {
@@ -150,8 +148,8 @@ textarea {
 
 #canvas {
     width: 100%;
-    margin: 20px;
-    padding: 20px;
+    margin: 10px;
+    padding:1px;
     display: block;
 }
 

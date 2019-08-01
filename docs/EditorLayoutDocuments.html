@@ -41,7 +41,8 @@
 
 <body onload="pageloaded()">
     <div class="page-container">
-        <div class="btn-group" style="margin-left: 12px;">
+        <div class="btn-group" style="padding:1px">
+
 
             <button class="btn btn-light btn-sm">
                 <a href="https://www.scheme.com/tspl4/" target="_blank">
@@ -169,6 +170,12 @@
     function clearresults() {
         result_editor.setValue('');
     }
+
+    function clearpressed() {
+        cleartranscript();
+        clearresults();
+    }
+
 
     function getexpressions() {
         expression_editor.setValue(

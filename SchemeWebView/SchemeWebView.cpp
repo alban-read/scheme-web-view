@@ -170,8 +170,8 @@ DWORD WINAPI process_postmessages(LPVOID x) {
 		else {
 			web_view_window->PostWebMessageAsString(post_messages.front().c_str());
 			post_messages.pop_front();
+			ReleaseMutex(g_messages_mutex);
 		}
-		ReleaseMutex(g_messages_mutex);
 	}
 }
 
@@ -311,7 +311,7 @@ ptr scheme_capture_screen(const char* relative_file_name)
 
 DWORD WINAPI  update_status(LPVOID x)
 {
-	RECT rect;
+ 
 	int last_pending_commands = -1;
 	int last_pending_messages = -1;
 	while (true) {
@@ -637,10 +637,6 @@ int CALLBACK WinMain(
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	TCHAR greeting[] = _T("WebView2andScheme");
-	HDC         hdc;
-	PAINTSTRUCT ps;
-	RECT        rect;
-
 	switch (message)
 	{
 	case WM_SIZE:

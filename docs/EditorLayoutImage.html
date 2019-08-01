@@ -40,7 +40,8 @@
 
 <body onload="pageloaded()">
     <div class="page-container">
-        <div class="btn-group" style="margin-left: 12px;">
+        <div class="btn-group" style="padding:1px">
+
 
             <button class="btn btn-light btn-sm">
 
@@ -48,7 +49,7 @@
                     <i class="fa fa-book" aria-hidden="true" style="color: #5c809e"></i>
                 </a>
             </button>
-            
+
             <button class="btn btn-light btn-sm" onclick='evaluateexpression();return false;'>
                 <i class="fa fa-play" aria-hidden="true" style="color: #5c809e"></i>
             </button>
@@ -73,7 +74,7 @@
                 </a>
             </button>
 
-            <button class="btn btn-light btn-sm" onclick='refreshCanvas();return false;'>
+            <button class="btn btn-light btn-sm" onclick='clearpressed();return false;'>
                 <i aria-hidden="true" style="color: #5c809e">Clear</i>
             </button>
 
@@ -82,11 +83,17 @@
 
         <div class="bg-image">
             <div class="panel-container-vertical">
-
-                <div class="panel-top">
                     <div class="panel-container">
                         <div class="panel-left">
-                            <textarea id='expression'></textarea>
+                            <div id="div2-1" style="height:65%;">
+                                <textarea id='expression'>;;expressions</textarea>
+                            </div>
+                            <div id="div2-2" style="height:25%;">
+                                <textarea id='transcript'>;;transcript</textarea>
+                            </div>
+                            <div id="div2-3" style="height:10%;">
+                                <textarea id='result'>;;result</textarea>
+                            </div>
                         </div>
                         <div class="splitter">
                         </div>
@@ -95,21 +102,6 @@
                         </div>
                     </div>
                 </div>
-                <div class="splitter-horizontal">
-                </div>
-                <div class="panel-bottom">
-                    <div class="panel-container">
-                        <div class="panel-left">
-                            <textarea id='result'></textarea>
-                        </div>
-                        <div class="splitter">
-                        </div>
-                        <div class="panel-right">
-                            <textarea id='transcript' width='100%'></textarea>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -167,6 +159,12 @@
 
     function clearresults() {
         result_editor.setValue('');
+    }
+
+    function clearpressed() {
+        cleartranscript();
+        clearresults();
+        refreshCanvas();
     }
 
     function getexpressions() {
