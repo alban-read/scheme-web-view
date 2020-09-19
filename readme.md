@@ -3,6 +3,9 @@
 
 Composed from Windows 10 Web View 2 (win32) and Chez Scheme.
 
+
+[A native version that includes the webview is actively maintained](https://github.com/alban-read/Scheme-Windows-Tiled-Shell)
+
 -------
 
 *Selfie* 
